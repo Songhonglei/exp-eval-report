@@ -1,2 +1,5 @@
 # Preserve the whitespace emitted by plotting tools in generated vector assets.
 *.svg -whitespace
+
+# CSV evidence retains its original CRLF line endings.
+*.csv whitespace=cr-at-eol
