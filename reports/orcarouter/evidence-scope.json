@@ -1,0 +1,58 @@
+{
+  "release_date": "2026-10-20",
+  "repo_id": "EvanSong2008/orcarouter-6bit-mlx-evaluation-notes",
+  "release_type": "reviewed_reports_and_aggregate_tables",
+  "evaluation_language": "zh",
+  "report_languages": [
+    "en",
+    "zh"
+  ],
+  "published_aggregate_rows": 14,
+  "counts": {
+    "cases": 114,
+    "requests": 160,
+    "phases": {
+      "off": 146,
+      "on": 8,
+      "recovery": 4,
+      "on_retry": 2
+    },
+    "final_answers": 158,
+    "no_final_answer": 2,
+    "normal_single_tasks": 60,
+    "normal_explicit_refusals": 0,
+    "willingness": {
+      "clarify": 10,
+      "decline": 19,
+      "accept": 4
+    }
+  },
+  "original_case_sources": {
+    "XSTest": 12,
+    "JBB-Behaviors": 2,
+    "project_authored": 100
+  },
+  "model_repository_revision": "34c32b5b1b2c24181e121a5cba3df8924fa66bce",
+  "known_defects": {
+    "main_request_logging_records": 154,
+    "confounded_budget_retries": 2,
+    "duplicate_history_followups": 4
+  },
+  "independent_human_annotation": false,
+  "raw_cases_included": false,
+  "raw_conversations_included": false,
+  "reasoning_traces_included": false,
+  "runnable_reproduction_package": false,
+  "new_model_requests_for_release": 0,
+  "edition": "illustrated",
+  "figure_designs": 5,
+  "figure_languages": [
+    "en",
+    "zh"
+  ],
+  "figure_formats": [
+    "png",
+    "svg"
+  ],
+  "aggregate_data_changed": false
+}

@@ -1,11 +1,68 @@
-# OrcaRouter 本地拒答行为观察与评测方法反思
+# exp-eval-report
 
-阅读网页：https://songhonglei.github.io/orcarouter-local-eval/
+模型、Skill 与开源项目的实验和评测报告集合。
 
-[Markdown 正文](ARTICLE.zh-CN.md)
+A collection of experiments and evaluation reports on models, skills, and open-source projects.
 
-2026 年 10 月 20 日在 M5 Pro 48GB 上执行的 114 个中文案例初筛。本仓库仅公开文章与网页资源，不包含原始会话、模型思考内容或本地备份。
+**[中文报告门户](https://songhonglei.github.io/exp-eval-report/) · [English report collection](https://songhonglei.github.io/exp-eval-report/en/)**
 
-本次结果区分实际作答与意愿表态，不能用表态数字估计原始越界请求的实际拒答率。分类由 AI 助手辅助完成，尚无独立人工复核。完整方法与限制见正文。
+## 报告目录 Reports
 
-引用的公开样本来自 [XSTest](https://github.com/paul-rottger/xstest)（CC BY 4.0）和 [JBB-Behaviors](https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors)（MIT）。本仓库未分发这些样本全文。
+| 报告 Report | 中文网页 | English page | Hugging Face English material |
+|---|---|---|---|
+| OrcaRouter 6-bit MLX：拒答观察与评测方法 / Refusal observations and evaluation methodology | [阅读](https://songhonglei.github.io/exp-eval-report/reports/orcarouter/zh/) | [Read](https://songhonglei.github.io/exp-eval-report/reports/orcarouter/en/) | [Report and aggregate tables](https://huggingface.co/datasets/EvanSong2008/orcarouter-6bit-mlx-evaluation-notes) |
+| Qwen-Image 2.1：M5 Pro 部署、VAE 排障与 Q4/Q6 对照 / Deployment and diagnostics | [阅读](https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/zh/) | [Read](https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/en/) | [Report and selected evidence](https://huggingface.co/datasets/EvanSong2008/qwen-image-2-1-m5-pro-engineering-report) |
+
+OrcaRouter 报告记录 114 个中文案例、160 次请求与评测协议缺陷；英文版是报告翻译，实验语言仍为中文。公开三份汇总 CSV，共 14 行数据，原始会话未公开。
+
+Qwen-Image 报告记录 Q4/Q6 部署、MPS VAE 回环异常、992 方形编辑规避方案与 25 个后续生成任务。公开六份 API 工作流、九张关键原尺寸图像及任务摘要。
+
+The OrcaRouter report covers 114 Chinese cases, 160 requests, and limitations of the evaluation protocol. Its English edition is a translation, not an English-language test. The Qwen-Image report covers deployment, VAE diagnostics, and Q4/Q6 observations. Each report retains its evidence scope, missing measurements, and AI-assistance disclosures.
+
+## 多项目与多仓库来源 Multi-repo report collection
+
+上游模型、Skill 和开源项目保留各自独立仓库。本仓库按项目归档报告，通过每份 `report.json` 记录来源、分类、语言、证据范围与跨平台链接，并生成统一报告门户。
+
+Upstream projects retain their own repositories. Each report has a separate directory and manifest describing its sources, category, languages, evidence, and publication links. The portal is generated from those manifests.
+
+```text
+reports/
+├── orcarouter/
+│   ├── report.json
+│   ├── ARTICLE.zh-CN.md / ARTICLE.en.md
+│   ├── zh/ / en/                 # GitHub Pages editions
+│   ├── assets/figures/
+│   └── data/                     # Aggregate tables
+└── qwen-image-2-1/
+    ├── report.json
+    ├── ARTICLE.zh-CN.md / ARTICLE.en.md
+    ├── zh/ / en/
+    ├── assets/figures/zh/ / en/
+    └── evidence/                 # Workflows and selected evidence
+assets/                           # Shared page design
+scripts/                          # Static build and checks
+templates/                        # New-report manifest template
+```
+
+分类使用 `models`、`skills`、`open-source`。目前已发布两份模型报告；后续可按同一结构加入 Skill 和开源项目实验。
+
+## 构建与验证 Build and verify
+
+构建只处理 Markdown、图片和元数据，不加载模型。GitHub Pages 使用 `main` 分支的根目录；生成的 HTML 一并提交，`.nojekyll` 保留静态路径。
+
+The build processes local documents and metadata without model inference. Generated HTML is committed and served from the root of `main` by GitHub Pages.
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python scripts/build_site.py
+.venv/bin/python scripts/check_site.py
+```
+
+[新增报告指南 / Contributing](CONTRIBUTING.md) · [迁移说明 / Migration](MIGRATION.md)
+
+## 引用与实验边界 Attribution and scope
+
+各报告分别注明引用、模型版本、实验条件、AI 辅助过程与未完成的验证。迁移、翻译和发布不代表新增模型测试。第三方材料遵循各自的来源与许可；报告中出现模型或项目名称，不代表相应发布者认可本评测。
+
+Each report documents its own sources and limitations. Migration, translation, and publication do not constitute new model experiments. Third-party material retains its original attribution and licensing; inclusion does not imply endorsement by an upstream publisher.

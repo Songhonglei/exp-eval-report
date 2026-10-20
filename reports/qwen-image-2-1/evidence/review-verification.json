@@ -1,0 +1,54 @@
+{
+  "method": "Static re-analysis of saved files; no ComfyUI startup, model loading, or new generation.",
+  "generation_tasks": 25,
+  "tasks_with_complete_memory_records": 24,
+  "all_25_server_times_checked_against_saved_events": true,
+  "selected_timing_checks": [
+    {
+      "quant": "Q4_K_M",
+      "case_id": "benchmark_cold",
+      "server_seconds": 215.036
+    },
+    {
+      "quant": "Q4_K_M",
+      "case_id": "benchmark_followup",
+      "server_seconds": 217.036
+    },
+    {
+      "quant": "Q6_K",
+      "case_id": "benchmark_cold",
+      "server_seconds": 202.769
+    },
+    {
+      "quant": "Q6_K",
+      "case_id": "benchmark_followup",
+      "server_seconds": 220.437
+    },
+    {
+      "quant": "Q6_K",
+      "case_id": "edit_acceptance",
+      "server_seconds": 242.747
+    }
+  ],
+  "vae_metrics_recomputed_from_original_pixels": [
+    {
+      "configuration": "MPS BF16",
+      "mse": 5087.95654296875,
+      "psnr_db": 11.06536967588691
+    },
+    {
+      "configuration": "MPS FP32",
+      "mse": 5088.1708984375,
+      "psnr_db": 11.065186711595645
+    },
+    {
+      "configuration": "CPU FP32",
+      "mse": 4.020650386810303,
+      "psnr_db": 42.08784049933678
+    }
+  ],
+  "model_total_bytes": 20507422736,
+  "model_hash_scope": "Historical download verification; no new full-weight hash pass during editorial review.",
+  "saved_manager_integration_passed": true,
+  "saved_mocked_protection_tests": 14
+}

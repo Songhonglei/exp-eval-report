@@ -1,0 +1,59 @@
+{
+  "note": "Original dimensions and decoded pixel values preserved; embedded PNG metadata removed for privacy. Associated conditions and workflows are provided separately. Selected teapot evidence only; this is not an export of all 25 generated outputs.",
+  "images": [
+    {
+      "file": "images/reference.png",
+      "role": "Reference input for VAE reconstruction and teapot editing",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "file": "images/vae-mps-bf16.png",
+      "role": "VAE reconstruction: MPS BF16",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "file": "images/vae-mps-fp32.png",
+      "role": "VAE reconstruction: MPS FP32",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "file": "images/vae-cpu-fp32.png",
+      "role": "VAE reconstruction: CPU FP32",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "file": "images/q4-t2i-1024.png",
+      "role": "Q4 first text-to-image performance observation",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "file": "images/q6-t2i-1024.png",
+      "role": "Q6 first text-to-image performance observation",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "file": "images/q4-edit-1024-failed.png",
+      "role": "Q4 1024 edit: visually failed despite successful execution",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "file": "images/q4-edit-992.png",
+      "role": "Q4 992 edit: accepted",
+      "width": 992,
+      "height": 992
+    },
+    {
+      "file": "images/q6-edit-992.png",
+      "role": "Q6 992 edit: accepted",
+      "width": 992,
+      "height": 992
+    }
+  ]
+}

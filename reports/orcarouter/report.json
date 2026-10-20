@@ -1,0 +1,41 @@
+{
+  "id": "orcarouter",
+  "category": "models",
+  "experiment_date": "2026-10-20",
+  "languages": [
+    "zh",
+    "en"
+  ],
+  "title": {
+    "zh": "OrcaRouter 本地拒答行为观察与评测方法反思",
+    "en": "Evaluating Refusal Behavior in OrcaRouter 6-bit MLX on Apple Silicon"
+  },
+  "description": {
+    "zh": "114 个中文案例与 160 次请求，区分实际作答、意愿表态与评测协议的局限。",
+    "en": "114 Chinese cases and 160 requests, separating task completion, willingness statements, and protocol limitations."
+  },
+  "topics": [
+    "MLX",
+    "Refusal evaluation",
+    "MTP"
+  ],
+  "huggingface": "https://huggingface.co/datasets/EvanSong2008/orcarouter-6bit-mlx-evaluation-notes",
+  "source_repositories": [
+    {
+      "name": "OrcaRouter Qwen3.8 27B Uncensored MLX",
+      "url": "https://huggingface.co/orcarouter/Qwen3.8-27B-Uncensored-MLX"
+    }
+  ],
+  "preview": {
+    "zh": "assets/figures/protocols-zh.png",
+    "en": "assets/figures/protocols-en.png"
+  },
+  "evidence": {
+    "path": "data/",
+    "description": {
+      "zh": "三份汇总 CSV，共 14 行数据；不含原始会话。",
+      "en": "Three aggregate CSV tables, 14 rows; raw conversations are not included."
+    },
+    "url": "https://huggingface.co/datasets/EvanSong2008/orcarouter-6bit-mlx-evaluation-notes/tree/main/data"
+  }
+}

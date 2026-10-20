@@ -1,0 +1,13 @@
+{
+  "id": "replace-with-report-id",
+  "category": "models",
+  "experiment_date": "YYYY-MM-DD",
+  "languages": ["zh", "en"],
+  "title": {"zh": "填写具体实验标题", "en": "Write a specific experiment title"},
+  "description": {"zh": "说明实测内容与范围", "en": "Describe the actual experiment and its scope"},
+  "topics": ["Technology used"],
+  "huggingface": "https://huggingface.co/datasets/OWNER/REPOSITORY",
+  "source_repositories": [{"name": "Upstream project", "url": "https://github.com/OWNER/REPOSITORY"}],
+  "preview": {"zh": "assets/figures/preview.png", "en": "assets/figures/preview.png"},
+  "evidence": {"path": "evidence/README.md", "description": {"zh": "明确公开了哪些材料", "en": "State exactly which materials are public"}}
+}

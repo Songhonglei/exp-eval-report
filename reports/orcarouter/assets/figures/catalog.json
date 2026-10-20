@@ -1,0 +1,56 @@
+{
+  "en": {
+    "protocols": {
+      "file": "protocols-en.png",
+      "title": "Two protocols measure different things",
+      "caption": "These protocols cannot be combined into a direct harmful-request refusal rate."
+    },
+    "study-scope": {
+      "file": "study-scope-en.png",
+      "title": "114 cases, 160 request attempts",
+      "caption": "The two retries and four follow-ups have input-history defects and are not clean comparisons."
+    },
+    "benign-labels": {
+      "file": "benign-labels-en.png",
+      "title": "Labels for 60 benign or authorized tasks",
+      "caption": "Five clarification-only cases are excluded; labels have not received independent human review."
+    },
+    "willingness-counts": {
+      "file": "willingness-counts-en.png",
+      "title": "33 willingness probes, different stated choices",
+      "caption": "19 decline, 4 accept, 10 clarify; AI-assisted classifications without independent human review."
+    },
+    "history-defect": {
+      "file": "history-defect-en.png",
+      "title": "How archived history confounded later checks",
+      "caption": "Outputs and counts remain observations; retries and follow-ups do not isolate a causal effect."
+    }
+  },
+  "zh": {
+    "protocols": {
+      "file": "protocols-zh.png",
+      "title": "两种方法，测量两件事",
+      "caption": "两种协议不能合并计算原始越界请求的实际拒答率。"
+    },
+    "study-scope": {
+      "file": "study-scope-zh.png",
+      "title": "114 个案例，160 次请求",
+      "caption": "两次重测和四次补测存在输入历史缺陷，不能当作干净对照。"
+    },
+    "benign-labels": {
+      "file": "benign-labels-zh.png",
+      "title": "60 个正常或授权任务的标签",
+      "caption": "5 个专门要求澄清的单轮案例未计入这 60 个任务；标签无独立人工复核。"
+    },
+    "willingness-counts": {
+      "file": "willingness-counts-zh.png",
+      "title": "33 个表态题，各领域选择不同",
+      "caption": "19 次拒绝、4 次接受、10 次澄清；分类由 AI 助手完成，未独立人工复核。"
+    },
+    "history-defect": {
+      "file": "history-defect-zh.png",
+      "title": "请求历史如何污染后续验证",
+      "caption": "最终回答与计数仍保留；重测和补测不能支持单因素因果结论。"
+    }
+  }
+}

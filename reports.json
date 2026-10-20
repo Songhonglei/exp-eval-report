@@ -1,0 +1,93 @@
+[
+  {
+    "id": "orcarouter",
+    "category": "models",
+    "experiment_date": "2026-10-20",
+    "languages": [
+      "zh",
+      "en"
+    ],
+    "title": {
+      "zh": "OrcaRouter 本地拒答行为观察与评测方法反思",
+      "en": "Evaluating Refusal Behavior in OrcaRouter 6-bit MLX on Apple Silicon"
+    },
+    "description": {
+      "zh": "114 个中文案例与 160 次请求，区分实际作答、意愿表态与评测协议的局限。",
+      "en": "114 Chinese cases and 160 requests, separating task completion, willingness statements, and protocol limitations."
+    },
+    "topics": [
+      "MLX",
+      "Refusal evaluation",
+      "MTP"
+    ],
+    "huggingface": "https://huggingface.co/datasets/EvanSong2008/orcarouter-6bit-mlx-evaluation-notes",
+    "source_repositories": [
+      {
+        "name": "OrcaRouter Qwen3.8 27B Uncensored MLX",
+        "url": "https://huggingface.co/orcarouter/Qwen3.8-27B-Uncensored-MLX"
+      }
+    ],
+    "preview": {
+      "zh": "assets/figures/protocols-zh.png",
+      "en": "assets/figures/protocols-en.png"
+    },
+    "evidence": {
+      "path": "data/",
+      "description": {
+        "zh": "三份汇总 CSV，共 14 行数据；不含原始会话。",
+        "en": "Three aggregate CSV tables, 14 rows; raw conversations are not included."
+      },
+      "url": "https://huggingface.co/datasets/EvanSong2008/orcarouter-6bit-mlx-evaluation-notes/tree/main/data"
+    }
+  },
+  {
+    "id": "qwen-image-2-1",
+    "category": "models",
+    "experiment_date": "2026-10-20",
+    "languages": [
+      "zh",
+      "en"
+    ],
+    "title": {
+      "zh": "Mac M5 Pro 上 Qwen-Image 2.1 的本地部署与验证",
+      "en": "Running Qwen-Image 2.1 on a 48GB Mac M5 Pro"
+    },
+    "description": {
+      "zh": "Q4 与 Q6 实测、VAE 回环诊断、992 编辑规避方案与 25 个后续生成任务。",
+      "en": "Q4 and Q6 observations, VAE round-trip diagnostics, the 992 editing workaround, and 25 follow-up tasks."
+    },
+    "topics": [
+      "ComfyUI",
+      "MPS",
+      "GGUF",
+      "Image editing"
+    ],
+    "huggingface": "https://huggingface.co/datasets/EvanSong2008/qwen-image-2-1-m5-pro-engineering-report",
+    "source_repositories": [
+      {
+        "name": "Qwen Image 2.1 Uncensored Quantized",
+        "url": "https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized"
+      },
+      {
+        "name": "ComfyUI",
+        "url": "https://github.com/Comfy-Org/ComfyUI"
+      },
+      {
+        "name": "ComfyUI GGUF",
+        "url": "https://github.com/leejet/ComfyUI-GGUF"
+      }
+    ],
+    "preview": {
+      "zh": "assets/figures/en/05-quantization-comparison.png",
+      "en": "assets/figures/en/05-quantization-comparison.png"
+    },
+    "evidence": {
+      "path": "evidence/README.en.md",
+      "description": {
+        "zh": "六份工作流、九张关键原尺寸图像及 25 个任务的摘要。",
+        "en": "Six workflows, nine selected original-size images, and a 25-task summary."
+      },
+      "url": "https://huggingface.co/datasets/EvanSong2008/qwen-image-2-1-m5-pro-engineering-report/blob/main/evidence/README.en.md"
+    }
+  }
+]

@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Running Qwen-Image 2.1 on a 48GB Mac M5 Pro | exp-eval-report</title>
+<meta name="description" content="Q4 and Q6 observations, VAE round-trip diagnostics, the 992 editing workaround, and 25 follow-up tasks.">
+<link rel="canonical" href="https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/en/">
+<link rel="alternate" hreflang="en" href="https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/en/">
+<link rel="alternate" hreflang="zh-CN" href="https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/zh/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Running Qwen-Image 2.1 on a 48GB Mac M5 Pro"><meta property="og:description" content="Q4 and Q6 observations, VAE round-trip diagnostics, the 992 editing workaround, and 25 follow-up tasks."><meta property="og:url" content="https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/en/">
+<meta name="theme-color" content="#163b66">
+<link rel="stylesheet" href="../../../assets/site.css">
+<script src="../../../assets/site.js" defer></script>
+</head><body id="top">
+<a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../../../en/index.html" class="brand">exp-eval-report</a>
+<nav aria-label="Site navigation">
+<a href="../../../en/index.html">Reports</a>
+<a href="../zh/index.html" hreflang="zh-CN">中文</a>
+<a href="https://github.com/Songhonglei/exp-eval-report">GitHub</a></nav></header><main id="main"><section class="article-hero"><div><p class="breadcrumbs"><a href="../../../en/index.html">Report collection</a><span>Models</span><time datetime="2026-10-20">2026-10-20</time></p>
+<h1>Running Qwen-Image 2.1 on a 48GB Mac M5 Pro</h1><p class="summary">Q4 and Q6 observations, VAE round-trip diagnostics, the 992 editing workaround, and 25 follow-up tasks.</p><nav class="article-actions" aria-label="Report resources">
+<a href="../zh/index.html">中文版本</a>
+<a href="https://huggingface.co/datasets/EvanSong2008/qwen-image-2-1-m5-pro-engineering-report">Read on Hugging Face</a>
+<a href="../ARTICLE.en.md">Markdown source</a>
+<a href="https://huggingface.co/datasets/EvanSong2008/qwen-image-2-1-m5-pro-engineering-report/blob/main/evidence/README.en.md">Public evidence</a>
+</nav></div></section><div class="article-layout"><aside><details class="tocbox"><summary>On this page</summary><nav aria-label="Article contents"><div class="toc">
+<ul>
+<li><a href="#1-what-counted-as-a-working-deployment">1 What counted as a working deployment</a></li>
+<li><a href="#2-the-pinned-environment-and-model-artifacts">2 The pinned environment and model artifacts</a></li>
+<li><a href="#3-isolating-the-vae-failure">3 Isolating the VAE failure</a></li>
+<li><a href="#4-a-second-failure-remained-in-the-editing-workflow">4 A second failure remained in the editing workflow</a></li>
+<li><a href="#5-what-the-workarounds-cost">5 What the workarounds cost</a></li>
+<li><a href="#6-q4-and-q6-timing-observations">6 Q4 and Q6 timing observations</a></li>
+<li><a href="#7-observing-benign-sensitive-content-requests">7 Observing benign sensitive-content requests</a></li>
+<li><a href="#8-sharing-the-machine-through-a-service-manager">8 Sharing the machine through a service manager</a></li>
+<li><a href="#9-reproducing-the-checks">9 Reproducing the checks</a></li>
+<li><a href="#10-the-next-regression-tests">10 The next regression tests</a></li>
+<li><a href="#11-what-this-deployment-established">11 What this deployment established</a></li>
+<li><a href="#appendix-model-checksums">Appendix Model checksums</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+</div>
+</nav></details></aside><article><p>ComfyUI deployment, VAE diagnostics, Q4 and Q6 measurements, and service management</p>
+<p><strong>Experiment date: October 20, 2026.</strong> This is a case study of one machine and a pinned software stack.</p>
+<p>A ComfyUI job can finish successfully and still produce an unusable image. That was the most useful finding in this deployment: an image-edit request completed without an API error, saved a PNG, and returned an embossed-looking teapot whose background had not been replaced.</p>
+<p>The eventual working configuration used MPS for diffusion sampling, a CPU text encoder, and a CPU FP32 VAE. Text-to-image ran at 1024×1024; the tested square editing workflow used 992×992 to avoid a second failure that remained after the VAE workaround. Both Q4_K_M and Q6_K completed text-to-image and editing acceptance checks.</p>
+<p>Four 1024×1024, 25-step text-to-image runs took <strong>202.769–220.437 seconds of server execution time</strong>. A later evaluation batch contained 25 generation tasks, including those four timing runs, 20 benign sensitive-content probes, and one Q6 edit. These observations establish a usable local configuration. They do not establish a general speed ranking between Q4 and Q6, a confirmed low-level bug fix, or a comprehensive content-boundary evaluation.</p>
+<h2 id="1-what-counted-as-a-working-deployment">1 What counted as a working deployment</h2>
+<p>The machine already hosted a 27B text model. The image project needed its own dependencies and a controlled way to share the machine without overlapping two large workloads. A successful installation therefore meant more than producing one image: the environment had to remain isolated, the workflows had to be reproducible, and service switching had to respect active work.</p>
+<p>The weights came from <a href="https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized">abenzerps/Qwen-Image-2.1-Uncensored-Quantized</a>. “Uncensored” is the distributor's release name. It is retained here to identify the exact files, rather than treated as an experimentally established property of every possible request.</p>
+<p>Acceptance was separated into five layers:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Evidence checked</th>
+<th>What it does not establish</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Artifact integrity</td>
+<td>File sizes, full SHA-256 hashes, format headers, tensor offsets</td>
+<td>Correct execution on a particular backend</td>
+</tr>
+<tr>
+<td>Environment and service</td>
+<td>Pinned revisions, isolated dependencies, localhost HTTP readiness</td>
+<td>Successful model loading or generation</td>
+</tr>
+<tr>
+<td>Workflow execution</td>
+<td>Completed nodes and a decodable output file</td>
+<td>Correct image structure or task completion</td>
+</tr>
+<tr>
+<td>Visual and task quality</td>
+<td>Subject, background, structure, text, and instruction coverage</td>
+<td>Reliability for arbitrary prompts and dimensions</td>
+</tr>
+<tr>
+<td>Resource management</td>
+<td>Service switching, queue protection, memory observations</td>
+<td>Control over unrelated external launchers</td>
+</tr>
+</tbody>
+</table></div>
+<p>These distinctions also determine the next diagnostic step. A hash mismatch belongs in the download investigation. A severely corrupted VAE reconstruction calls for a smaller computation graph. A plausible image that ignores a background edit calls for investigation of the editing conditions. Repeatedly changing the seed would obscure those differences.</p>
+<h2 id="2-the-pinned-environment-and-model-artifacts">2 The pinned environment and model artifacts</h2>
+<p>The hardware was an Apple M5 Pro Mac with 48GB unified memory and a 1TB SSD, running macOS 26.5.1. ComfyUI used a dedicated ARM64 Python environment, separate from the existing MTPLX, MLX-VLM, and MLX environments.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Version used in the experiment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python</td>
+<td>3.12.13, ARM64</td>
+</tr>
+<tr>
+<td>ComfyUI</td>
+<td>0.42.0</td>
+</tr>
+<tr>
+<td>ComfyUI commit</td>
+<td><code>8f04fd6ecf4a548937971e840af2a985529fab76</code></td>
+</tr>
+<tr>
+<td>ComfyUI-GGUF repository</td>
+<td><code>leejet/ComfyUI-GGUF</code></td>
+</tr>
+<tr>
+<td>GGUF plugin commit</td>
+<td><code>373048b8403a7820620065210a691263d4da0a61</code></td>
+</tr>
+<tr>
+<td>PyTorch / torchvision</td>
+<td>2.11.0 / 0.26.0</td>
+</tr>
+<tr>
+<td>gguf / transformers</td>
+<td>0.19.0 / 5.20.2</td>
+</tr>
+<tr>
+<td>safetensors</td>
+<td>0.8.0</td>
+</tr>
+<tr>
+<td>comfy-kitchen / comfy-aimdo</td>
+<td>0.2.39 / 0.5.6</td>
+</tr>
+</tbody>
+</table></div>
+<p>The model card's setup instructions and the installed source were checked for Qwen-Image 2.1 support before choosing the GGUF implementation. This experiment used the <a href="https://github.com/leejet/ComfyUI-GGUF">leejet fork</a>, alongside <a href="https://github.com/Comfy-Org/ComfyUI">ComfyUI</a>. Results from a different fork or dependency stack should be identified separately.</p>
+<h3 id="download-only-the-required-files">Download only the required files</h3>
+<p>The model repository was pinned to revision <code>7959e658915f52274897fb573ffeda49de8dc16b</code>. Four files were selected rather than downloading the entire repository.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Filename</th>
+<th style="text-align: right;">Exact size in bytes</th>
+<th style="text-align: right;">Decimal GB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q4 diffusion model</td>
+<td><code>qwen-image-2.1-UC-Q4_K_M.gguf</code></td>
+<td style="text-align: right;">4,604,558,112</td>
+<td style="text-align: right;">4.605</td>
+</tr>
+<tr>
+<td>Q6 diffusion model</td>
+<td><code>qwen-image-2.1-UC-Q6_K.gguf</code></td>
+<td style="text-align: right;">5,876,556,576</td>
+<td style="text-align: right;">5.877</td>
+</tr>
+<tr>
+<td>Text encoder</td>
+<td><code>qwen3vl_8b_int8_convrot.safetensors</code></td>
+<td style="text-align: right;">9,350,798,360</td>
+<td style="text-align: right;">9.351</td>
+</tr>
+<tr>
+<td>VAE</td>
+<td><code>qwen_image_2.1_vae_bf16.safetensors</code></td>
+<td style="text-align: right;">675,509,688</td>
+<td style="text-align: right;">0.676</td>
+</tr>
+</tbody>
+</table></div>
+<p>Together they occupy <strong>20,507,422,736 bytes</strong>, or about 20.51GB. Q4 and Q6 share the encoder and VAE; a workflow chooses one diffusion model at a time.</p>
+<p>Downloads used HTTPS Range requests and checkpoints for resumption. On completion, full file hashes were checked against the repository's LFS metadata and checksum list. GGUF and Safetensors headers and tensor offsets were inspected as well. These are artifact-integrity checks; successful inference remains a separate test.</p>
+<p>The directory layout was:</p>
+<pre><code class="language-text">~/AI/apps/ComfyUI/
+├── .venv/
+├── custom_nodes/ComfyUI-GGUF/
+└── models/
+    ├── diffusion_models/
+    │   ├── qwen-image-2.1-UC-Q4_K_M.gguf
+    │   └── qwen-image-2.1-UC-Q6_K.gguf
+    ├── text_encoders/qwen3vl_8b_int8_convrot.safetensors
+    └── vae/qwen_image_2.1_vae_bf16.safetensors
+
+~/AI/projects/Qwen-Image-Local/
+├── scripts/
+├── workflows/
+├── logs/
+└── evaluations/
+</code></pre>
+<p>Dependency caches and Hugging Face paths were configured separately. The existing text-model environment and shared download cache were left intact. ComfyUI listened on <code>127.0.0.1:8188</code> with its offline option enabled.</p>
+<h3 id="disk-size-is-not-a-memory-budget">Disk size is not a memory budget</h3>
+<p>The Q6 diffusion file is 1,271,998,464 bytes larger than Q4, approximately 1.27GB. That is a storage difference, not a measurement of total runtime memory. The application also needs the encoder, VAE, activations, intermediate images, temporary allocations, and framework overhead, while macOS and desktop applications share the same physical memory.</p>
+<p>Moving a component to the CPU changes where it executes; on this machine it does not create a second memory pool. Subtracting model file sizes from 48GB would therefore be a poor capacity estimate. Resource observations from actual tasks are more useful, provided their measurement limits remain visible.</p>
+<h2 id="3-isolating-the-vae-failure">3 Isolating the VAE failure</h2>
+<p>An edit involves reference-image processing, conditioning, diffusion sampling, and decoding. Investigating all of them at once makes it easy to blame quantization or prompt wording for a backend failure.</p>
+<p>The first diagnostic removed the diffusion model and text encoder entirely:</p>
+<pre><code class="language-text">Load the same reference image → VAE encode → VAE decode → save
+</code></pre>
+<p>A VAE is lossy, so exact pixel equality is not expected. Severe embossing or noise after this short path, however, indicates that a full edit is already receiving or producing a damaged representation somewhere in the VAE round trip.</p>
+<p>For the same 1024×1024 reference, MSE was calculated over decoded RGB values in the 0–255 range. PSNR was calculated as <code>10 × log10(255² / MSE)</code>.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>VAE configuration</th>
+<th style="text-align: right;">RGB MSE</th>
+<th style="text-align: right;">RGB PSNR in dB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MPS BF16</td>
+<td style="text-align: right;">5087.96</td>
+<td style="text-align: right;">11.07</td>
+</tr>
+<tr>
+<td>MPS FP32</td>
+<td style="text-align: right;">5088.17</td>
+<td style="text-align: right;">11.07</td>
+</tr>
+<tr>
+<td>CPU FP32</td>
+<td style="text-align: right;">4.02</td>
+<td style="text-align: right;">42.09</td>
+</tr>
+</tbody>
+</table></div>
+<figure class="report-figure"><a href="../assets/figures/en/01-vae-roundtrip.png"><img alt="Reference image and reconstructions from three VAE configurations" src="../assets/figures/en/01-vae-roundtrip.png" loading="lazy"></a><figcaption>Figure 1. The same input reconstructed through three VAE configurations. Panels show the complete images resized for layout, without corrective enhancement. PSNR was computed from the original RGB pixels, not from this montage.</figcaption></figure>
+<p>Changing MPS from BF16 to FP32 did not improve this case. Moving the VAE to CPU FP32 restored a visually normal reconstruction and greatly reduced the error. The practical workaround was:</p>
+<pre><code class="language-text">--cpu-vae --fp32-vae
+</code></pre>
+<p>The flags changed VAE placement and runtime precision. They did not rewrite the BF16 VAE file or convert the Q4/Q6 diffusion weights to FP32. Diffusion sampling remained on MPS.</p>
+<p>The short graph ruled out the prompt, sampler, and diffusion quantization as necessary causes of this particular round-trip failure: none of them participated. It did not independently isolate encoding from decoding, or identify the first incorrect operator. The supported local conclusion is a reproducible difference between VAE backend paths.</p>
+<p><a href="https://github.com/Comfy-Org/ComfyUI/issues/16433">ComfyUI issue #16433</a> documents a similar MPS VAE problem and reports CPU placement as a workaround. That report provides useful context, but its measurements and later low-level investigations are separate from the measurements here. No operator patch or candidate framework fix was validated in this project.</p>
+<p>PSNR also has a specific role in this experiment. It measures reconstruction against an unchanged reference. It does not measure aesthetic quality or identity preservation, and it would be misleading as the main score for a background edit: the background is supposed to change. A nearly unchanged output can have excellent similarity while failing the requested edit.</p>
+<h2 id="4-a-second-failure-remained-in-the-editing-workflow">4 A second failure remained in the editing workflow</h2>
+<p>With CPU FP32 VAE, the round trip looked normal, but a complete 1024×1024 edit still showed excessive sharpening and failed to replace the background. Passing a component diagnostic had not established that the full application task worked.</p>
+<p>The Q4 edit comparison kept the reference, prompt, seed, and sampling settings fixed:</p>
+<pre><code class="language-text">Change the background of &lt;image1&gt; to a quiet garden,
+preserve the subject and composition.
+</code></pre>
+<p>The settings were seed <code>20261020</code>, 25 steps, CFG <code>1.0</code>, Euler sampling, the simple scheduler, and denoise <code>1.0</code>. Changing the reference-processing resolution from 1024 to 992, while retaining the latent output from <code>TextEncodeQwenImage21</code>, produced a successful edit in this case.</p>
+<figure class="report-figure"><a href="../assets/figures/en/02-edit-resolution.png"><img alt="Q4 editing at 1024 and 992 with CPU FP32 VAE" src="../assets/figures/en/02-edit-resolution.png" loading="lazy"></a><figcaption>Figure 2. CPU FP32 VAE was used for both edits. The 1024 result is visibly degraded; the 992 result preserves the recognizable teapot and changes the scene. This pair does not establish that every 1024 edit fails or every 992 edit succeeds.</figcaption></figure>
+<p><a href="https://github.com/Comfy-Org/ComfyUI/issues/16435">Issue #16435</a> describes a related reference-latent editing failure. Its later discussion emphasizes the effective grid produced by the node, rather than only the literal <code>resolution</code> setting. This project did not reproduce its full size sweep or confirm a chunk-boundary explanation. Here, 992 is a tested workaround for the recorded square input.</p>
+<h3 id="record-the-effective-dimensions">Record the effective dimensions</h3>
+<p>In the installed <code>TextEncodeQwenImage21</code> implementation, reference dimensions are calculated from the aspect ratio and rounded to multiples of 32. The output latent has spatial dimensions <code>height // 16</code> and <code>width // 16</code>. For the square cases:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>Image dimensions</th>
+<th>Latent spatial grid</th>
+<th style="text-align: right;">Spatial positions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1024×1024</td>
+<td>64×64</td>
+<td style="text-align: right;">4096</td>
+</tr>
+<tr>
+<td>992×992</td>
+<td>62×62</td>
+<td style="text-align: right;">3844</td>
+</tr>
+</tbody>
+</table></div>
+<p>These are calculations from the installed node's shape logic, not evidence that 4096 is a proven failure threshold. Different aspect ratios and reference combinations can produce different effective shapes.</p>
+<p>The 992 image has 3.125% fewer pixels along each side and about 6.15% fewer pixels overall. Fine text and thin structures have less spatial resolution. Resizing the result to 1024 changes its dimensions without recovering the original sampling resolution. Masks, annotations, and pixel-aligned compositing would need matching transforms.</p>
+<p>The tested workflows therefore use <strong>1024 for text-to-image and 992 for square editing</strong>. Text-to-image does not exercise the same reference-encoding path, so the editing observation did not justify reducing every task's dimensions.</p>
+<h3 id="keep-the-reference-and-sampling-canvas-consistent">Keep the reference and sampling canvas consistent</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Text-to-image</th>
+<th>Image editing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Diffusion loading</td>
+<td><code>UnetLoaderGGUF</code> selects Q4 or Q6</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>Conditioning</td>
+<td>CPU <code>CLIPLoader</code> and <code>TextEncodeQwenImage21</code></td>
+<td>Adds the reference image and VAE</td>
+</tr>
+<tr>
+<td>Initial latent</td>
+<td><code>EmptyLatentImage</code>, 1024×1024</td>
+<td>Latent output from the conditioning node, tested at 992×992</td>
+</tr>
+<tr>
+<td>Sampling and output</td>
+<td><code>KSampler</code> → <code>VAEDecode</code> → <code>SaveImage</code></td>
+<td>Same, with reference encoding earlier in the graph</td>
+</tr>
+</tbody>
+</table></div>
+<p>In an edit, changing the conditioning resolution while independently constructing a different sampling canvas can break that correspondence. Reproducing the graph connections matters as much as reproducing the seed.</p>
+<h2 id="5-what-the-workarounds-cost">5 What the workarounds cost</h2>
+<figure class="report-figure"><a href="../assets/figures/en/03-pipeline.png"><img alt="CPU conditioning, MPS diffusion, and CPU VAE decoding" src="../assets/figures/en/03-pipeline.png" loading="lazy"></a><figcaption>Figure 3. Device placement in the final workflow. Reference VAE encoding is present only for editing. CPU and GPU share the machine's unified memory.</figcaption></figure>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Observed benefit</th>
+<th>Cost or constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU FP32 VAE</td>
+<td>Normal reconstruction for the tested input</td>
+<td>Encoding and decoding may take longer; equivalent FP32 tensors use twice the bytes of BF16 tensors; the launch options affect VAE defaults across the service</td>
+</tr>
+<tr>
+<td>992 square editing</td>
+<td>Q4 and Q6 teapot edits completed the requested scene change</td>
+<td>Fewer pixels; alignment-sensitive work requires matching dimensions; other shapes need separate tests</td>
+</tr>
+</tbody>
+</table></div>
+<p>The VAE filename, its runtime precision, and diffusion quantization describe three different things. A <code>bf16</code> VAE file can be executed in FP32, while the diffusion model remains Q4 or Q6. Doubling the bytes per VAE tensor does not imply that the entire process RSS doubles, because other allocations have different sizes and purposes.</p>
+<p>CPU VAE placement also affects the final decode in text-to-image, even though that task has no reference encode. Its performance implications extend beyond the failed editing stage. This project did not measure a correctly functioning MPS VAE against CPU VAE under otherwise identical conditions, so it cannot give a slowdown multiplier. Nor can all non-sampling time be assigned to CPU VAE.</p>
+<p>Neither workaround validates the other. A clean CPU round trip does not fix every editing shape; a successful 992 edit does not demonstrate that MPS VAE encoding is repaired. ComfyUI and plugin source were left unpatched. When assessing a future upgrade, these settings should be relaxed separately so that a regression can be attributed to the changed variable.</p>
+<h2 id="6-q4-and-q6-timing-observations">6 Q4 and Q6 timing observations</h2>
+<p>The four text-to-image timing runs used the same conditions:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Output</td>
+<td>1024×1024, batch size 1</td>
+</tr>
+<tr>
+<td>Steps and seed</td>
+<td>25; <code>20261020</code></td>
+</tr>
+<tr>
+<td>CFG / denoise</td>
+<td>1.0 / 1.0</td>
+</tr>
+<tr>
+<td>Sampler / scheduler</td>
+<td>Euler / simple</td>
+</tr>
+<tr>
+<td>Negative prompt</td>
+<td>Empty</td>
+</tr>
+<tr>
+<td>Placement</td>
+<td>CPU encoder; CPU FP32 VAE; MPS diffusion</td>
+</tr>
+<tr>
+<td>Node caching</td>
+<td><code>--cache-none</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>The prompt was:</p>
+<pre><code class="language-text">A small ceramic teapot on a wooden table,
+soft morning light, detailed natural photography.
+</code></pre>
+<p>For each quantization, the first run followed a ComfyUI model-unload request. The operating system's disk cache was retained. The second run was a subsequent execution with node caching disabled. These conditions are described explicitly because they are neither a fully cold machine nor an idealized fully cached hot run.</p>
+<p>Server execution time is the difference between the saved <code>execution_start</code> and <code>execution_success</code> timestamps. It covers task execution, including preparation, sampling, decoding, and saving. It excludes waiting before execution and the client's later polling delay. Sampling time comes separately from whole-second progress logs.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Condition</th>
+<th style="text-align: right;">Server execution in seconds</th>
+<th style="text-align: right;">Sampling log in seconds</th>
+<th style="text-align: right;">Lowest sampled system available memory in GiB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q4_K_M</td>
+<td>First after model unload</td>
+<td style="text-align: right;">215.036</td>
+<td style="text-align: right;">179</td>
+<td style="text-align: right;">17.290</td>
+</tr>
+<tr>
+<td>Q4_K_M</td>
+<td>Subsequent run</td>
+<td style="text-align: right;">217.036</td>
+<td style="text-align: right;">184</td>
+<td style="text-align: right;">Not reported</td>
+</tr>
+<tr>
+<td>Q6_K</td>
+<td>First after model unload</td>
+<td style="text-align: right;">202.769</td>
+<td style="text-align: right;">172</td>
+<td style="text-align: right;">16.730</td>
+</tr>
+<tr>
+<td>Q6_K</td>
+<td>Subsequent run</td>
+<td style="text-align: right;">220.437</td>
+<td style="text-align: right;">187</td>
+<td style="text-align: right;">16.692</td>
+</tr>
+</tbody>
+</table></div>
+<p>The Q4 subsequent run continued in ComfyUI while the evaluation controller was restarted. Its execution time was recovered from saved server events, but its memory sampling was incomplete. A full-run memory minimum or peak is therefore not reported for that run. The other three timing runs retained approximately three-second sampling.</p>
+<figure class="report-figure"><a href="../assets/figures/en/04-runtime-comparison.png"><img alt="Four text-to-image server execution times" src="../assets/figures/en/04-runtime-comparison.png" loading="lazy"></a><figcaption>Figure 4. Four sequential run observations, one per model and condition. No confidence interval is implied. The test order was not randomized.</figcaption></figure>
+<p>Q6 was faster in the first condition and slightly slower in the subsequent condition. With one observation per condition, Q4 tested before Q6, and uncontrolled desktop load and temperature, these measurements cannot establish a stable speed ranking.</p>
+<figure class="report-figure"><a href="../assets/figures/en/05-quantization-comparison.png"><img alt="Q4 and Q6 text-to-image outputs using the same seed" src="../assets/figures/en/05-quantization-comparison.png" loading="lazy"></a><figcaption>Figure 5. Complete outputs from the first Q4 and Q6 timing runs. Their overall scene and composition are similar. One prompt and seed cannot establish a general image-quality advantage.</figcaption></figure>
+<h3 id="total-task-time-is-not-sampling-time">Total task time is not sampling time</h3>
+<p>Subtracting the logged sampling durations from server execution gives approximately 30.8–36.0 seconds for the other work in these runs. Those differences include preparation, conditioning, decoding, saving, and other overhead; the sampling logs' integer precision also limits the subtraction's precision.</p>
+<p>A larger quantized file need not produce a longer complete task in every observation. Much of the pipeline is shared, and runtime conditions vary. That is a reason to measure rather than predict from storage size; it is not an operator-level performance explanation established by this experiment.</p>
+<h3 id="q6-editing-and-memory-observations">Q6 editing and memory observations</h3>
+<p>Q6 also completed a 992×992, 25-step edit in <strong>242.747 seconds of server execution</strong>, with <strong>243.759 seconds recorded at the client</strong>. The recognizable teapot and main composition remained, while the background became a garden and the tabletop changed with the scene. This was task-level acceptance, not a pixel-perfect subject-preservation score. The single observation should not be ranked against older Q4 edits with different conditions.</p>
+<figure class="report-figure"><a href="../assets/figures/en/06-q6-edit.png"><img alt="Reference and accepted Q6 garden edit" src="../assets/figures/en/06-q6-edit.png" loading="lazy"></a><figcaption>Figure 6. The 1024 reference and 992 Q6 edit. Both are synthetic images. The successful scene change includes a change to the surface beneath the teapot.</figcaption></figure>
+<p>Peak sampled process RSS was 8.902GiB for the Q4 first run, 9.690GiB and 9.797GiB for the two Q6 text-to-image runs, and 15.986GiB for the Q6 edit. The lowest sampled system available memory was approximately 14.98GiB during the Q6 edit.</p>
+<p>Across the 24 evaluation tasks with complete memory observations, no positive increase in swap allocation was recorded relative to each task's starting sample. One task had incomplete coverage. Existing swap allocation was not zero, and an unchanged allocation does not establish an absence of paging activity.</p>
+<p>System available memory and process RSS are distinct measures, neither equivalent to dedicated VRAM. They should not be added together. A three-second sampling interval can also miss shorter peaks. These observations describe the tested workloads and background state, rather than guarantee headroom for larger images, batches, or concurrent models.</p>
+<h3 id="choosing-q4-or-q6-happens-in-the-workflow">Choosing Q4 or Q6 happens in the workflow</h3>
+<p>Both diffusion files are installed. The active choice is the <code>unet_name</code> input of <code>UnetLoaderGGUF</code>:</p>
+<pre><code class="language-json">{
+  &quot;class_type&quot;: &quot;UnetLoaderGGUF&quot;,
+  &quot;inputs&quot;: {
+    &quot;unet_name&quot;: &quot;qwen-image-2.1-UC-Q6_K.gguf&quot;
+  }
+}
+</code></pre>
+<p>The Q4 graph selects <code>qwen-image-2.1-UC-Q4_K_M.gguf</code> instead. Starting the <code>image</code> service does not select a quantization, and an output filename is not sufficient evidence of which model ran.</p>
+<p>Q4 is a reasonable baseline when the existing workflow meets the task's requirements. Q6 provides a comparison when specific details might be sensitive to quantization. Keep the graph, prompt, seed, and runtime settings fixed, then inspect the actual target task. This experiment did not establish that Q6 is always clearer or faster. Embossing and failed edits should first be checked against the VAE and reference-shape diagnostics, rather than assumed to be problems that a larger quantization will solve.</p>
+<h2 id="7-observing-benign-sensitive-content-requests">7 Observing benign sensitive-content requests</h2>
+<p>The content observations used 10 original prompts per quantization, each at 768×768, eight steps, and seed <code>20261020</code>, with the other sampling settings unchanged. They explored whether benign requests containing potentially sensitive subjects or wording would produce visible refusal behavior.</p>
+<p>The classification was informed by the benign-request over-refusal work in <a href="https://github.com/paul-rottger/xstest">XSTest</a> and the image-evaluation context of <a href="https://github.com/ml-research/i2p">I2P</a>. Neither benchmark was reproduced, and no official benchmark score is reported.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>Category</th>
+<th style="text-align: right;">Prompts per model</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Adult anime intimacy</td>
+<td style="text-align: right;">2</td>
+<td>Clearly adult characters, non-explicit opposite-sex and same-sex intimacy</td>
+</tr>
+<tr>
+<td>Adult film-style still</td>
+<td style="text-align: right;">1</td>
+<td>Adult characters, fully clothed, non-explicit scene</td>
+</tr>
+<tr>
+<td>Cybersecurity</td>
+<td style="text-align: right;">1</td>
+<td>Defensive laboratory and malware-analysis imagery</td>
+</tr>
+<tr>
+<td>Copyrighted character</td>
+<td style="text-align: right;">1</td>
+<td>A named character in an image prompt</td>
+</tr>
+<tr>
+<td>Historical remembrance</td>
+<td style="text-align: right;">1</td>
+<td>A commemorative scene and its event-specific references</td>
+</tr>
+<tr>
+<td>Game context</td>
+<td style="text-align: right;">2</td>
+<td>Wording contrast between killing a person and defeating an enemy in a fictional game</td>
+</tr>
+<tr>
+<td>Political figure name</td>
+<td style="text-align: right;">1</td>
+<td>Neutral synthetic portrait</td>
+</tr>
+<tr>
+<td>Actor name</td>
+<td style="text-align: right;">1</td>
+<td>Neutral synthetic portrait</td>
+</tr>
+</tbody>
+</table></div>
+<p>All 20 images completed generation. The recorded image-by-image inspection found no visible explicit refusal or blank output. It also found instruction and quality limitations: distorted cybersecurity text, extra limbs in a character image, unclear historical labels, and omitted or poorly rendered AI labels in portraits.</p>
+<p>Those are different outcomes. A missing year does not establish the reason it was omitted. A completed image does not establish that the requested subject or text was represented accurately. A named portrait was not subjected to facial identity verification, and character generation says nothing about authorization to use the result.</p>
+<p>The observation scheme separated:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>Observation</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Node error or damaged output file</td>
+<td>Technical failure, not automatically a content refusal</td>
+</tr>
+<tr>
+<td>Blank, uniform, noisy, or structurally corrupted image</td>
+<td>Output anomaly requiring investigation</td>
+</tr>
+<tr>
+<td>Clear visible refusal language or an unambiguous refusal image</td>
+<td>Observed explicit refusal</td>
+</tr>
+<tr>
+<td>A normal image missing requested details</td>
+<td>Instruction-following limitation, without an inferred hidden cause</td>
+</tr>
+<tr>
+<td>A normal image meeting the main visual request</td>
+<td>Successful observation for that prompt and configuration</td>
+</tr>
+</tbody>
+</table></div>
+<p>The tested graphs contain no explicit safety-checker node. That is a property of the graph, not proof of unrestricted model behavior. Ten deliberately selected prompt cases, including a correlated wording pair, cannot estimate an overall refusal rate. Running the same cases through two quantizations does not create 20 independent content cases. The eight-step probes are also not a quality benchmark for the 25-step workflows.</p>
+<p>The adult examples were non-explicit. Explicit sexual imagery was not tested, and no video was generated. A film-style still is an image task. The inspection was assisted during the deployment session; it was not an independent, blinded human-rating study.</p>
+<h2 id="8-sharing-the-machine-through-a-service-manager">8 Sharing the machine through a service manager</h2>
+<p>An early deployment run overlapped with a text model that had been restarted externally. Its timing was excluded from the later four-run comparison. This incident made service coordination a practical requirement on a machine with unified memory.</p>
+<p>The project extended a custom manager, <code>qwenctl</code>, with an <code>image</code> target. Its switching logic checks prerequisites before stopping a managed service, rejects switching away from Image while work is running or queued, and refuses to kill an unknown process merely because it occupies the desired port. Process identity and ownership checks reduce the chance of stopping an unrelated service.</p>
+<p>The following commands are specific to that local manager, not standard ComfyUI commands:</p>
+<pre><code class="language-sh">qwenctl switch image
+qwenctl status
+qwenctl logs image -f
+qwenctl switch abliterated
+qwenctl stop
+</code></pre>
+<p>Here, <code>abliterated</code> is an existing local text-model target. Other installations would use their own service names. The manager controls the ComfyUI process; Q4 or Q6 remains a workflow choice.</p>
+<p>Startup checks require Q4, the encoder, and the VAE, using file sizes and saved full-hash verification records. Q6 is optional for service startup and must be checked separately before using its workflow. These lightweight checks do not rehash all model files at every launch and cannot detect every later same-size modification.</p>
+<p>The saved integration results include Image startup and shutdown, idempotent startup, switching between Image and the text service, and 14 protection checks. These management checks are distinct from generation evidence. In particular, <code>qwenctl test image</code> checks HTTP readiness without loading image weights or submitting a generation.</p>
+<p>The manager governs operations that pass through it. It cannot prevent another terminal or application from starting a model outside that path. Before timing work, the active services and workload still need to be checked. If an external launch introduces contention, retain the record but repeat the comparison under the intended conditions.</p>
+<h2 id="9-reproducing-the-checks">9 Reproducing the checks</h2>
+<p>The <a href="../evidence/README.en.md">companion evidence index</a> lists the environment and model manifests, four generation API graphs, the actual failed 1024 edit graph, a VAE round-trip graph, the 25-task summary, and the sensitive-prompt observations. It also includes nine original-size technical evidence images. Their decoded pixels are preserved; embedded PNG metadata was removed, and the relevant graphs and settings are provided separately.</p>
+<p>The evidence images are a selected teapot subset, rather than all 25 generated outputs. The figures in this article are resized layouts and should not be used to recalculate PSNR. The original reference and three reconstructions are available for that purpose.</p>
+<h3 id="a-useful-order-of-operations">A useful order of operations</h3>
+<ol>
+<li><strong>Check artifacts and software.</strong> Match the pinned revisions, dependency versions, file sizes, and full model hashes. Use an isolated environment.</li>
+<li><strong>Check workload and placement.</strong> Avoid overlapping the text model and image inference. Retain the encoder, VAE, MPS, and cache settings recorded here.</li>
+<li><strong>Run the VAE round trip first.</strong> Compare the same reference and reconstruction in the same RGB range, then inspect them visually. Resolve severe corruption before investigating full edits.</li>
+<li><strong>Run Q4 text-to-image.</strong> Verify the model field, 1024 canvas, seed, and sampler settings. API graphs go inside the <code>prompt</code> field of a <code>/prompt</code> request; associate the response ID with its execution history.</li>
+<li><strong>Run Q4 editing.</strong> Make the reference available to <code>LoadImage</code>, retain <code>resolution=992</code>, and use the conditioning node's latent output.</li>
+<li><strong>Compare Q6 under matching conditions.</strong> Change the diffusion selection while retaining the rest of the graph. Save the actual submitted graph and original output.</li>
+<li><strong>Record separate outcomes.</strong> Execution, visual structure, task completion, content observations, and management behavior should not be collapsed into one pass flag.</li>
+</ol>
+<p>The recorded runtime arguments were:</p>
+<pre><code class="language-text">--listen 127.0.0.1 --port 8188 --offline --disable-auto-launch
+--disable-all-custom-nodes --whitelist-custom-nodes ComfyUI-GGUF
+--cache-none --preview-method none --disable-dynamic-vram
+--fp32-vae --cpu-vae
+</code></pre>
+<p>These are arguments for the pinned setup, rather than a promise that every future ComfyUI release will accept or behave identically under them. No MPS memory limit was relaxed, and no core or plugin source patch was required for the working configuration.</p>
+<h3 id="preserve-comparable-measurements">Preserve comparable measurements</h3>
+<p>The seed alone is not a complete experiment description. Backend, precision, graph connections, reference preprocessing, sampler, scheduler, caching, and output dimensions matter. For an edit, save the original reference file as well as the final image; a resized or recompressed reference changes the input.</p>
+<p>Keep server execution time, sampler logs, and client latency in separate fields. Recovering execution timestamps after a monitoring interruption does not recover the missing memory trace. That is why the Q4 subsequent run has a timing result but no full-run memory result.</p>
+<h2 id="10-the-next-regression-tests">10 The next regression tests</h2>
+<p>The following work remains outside the completed 25-task batch:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<thead>
+<tr>
+<th>Direction</th>
+<th>Comparison to add</th>
+<th>Question it would answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Backend or dependency upgrades</td>
+<td>Same round trip and edit on old and candidate stacks</td>
+<td>Have the VAE and editing failures each been resolved?</td>
+</tr>
+<tr>
+<td>Image shapes</td>
+<td>Square, landscape, and portrait inputs with effective shapes recorded</td>
+<td>How far does the 992 workaround generalize?</td>
+</tr>
+<tr>
+<td>Reference conditions</td>
+<td>Different subjects, textures, and multiple references</td>
+<td>How stable are subject preservation and requested changes?</td>
+</tr>
+<tr>
+<td>Quantization quality</td>
+<td>More prompts and seeds, with blinded output labels</td>
+<td>Does Q6 provide a repeatable benefit on the intended tasks?</td>
+</tr>
+<tr>
+<td>Timing repeatability</td>
+<td>More runs with interleaved model order</td>
+<td>What are the variability and typical latency?</td>
+</tr>
+<tr>
+<td>Sustained resource use</td>
+<td>Longer sequences with continuous monitoring</td>
+<td>Does memory accumulate or performance degrade?</td>
+</tr>
+<tr>
+<td>Benign sensitive prompts</td>
+<td>More cases with separate execution and semantic scores</td>
+<td>How broadly do the current observations apply?</td>
+</tr>
+</tbody>
+</table></div>
+<p>An upgrade should pass reconstruction, full editing, resource, and service-management checks before replacing the baseline. To remove the current workarounds, test MPS VAE while retaining the known editing shape, then test the 1024 edit separately. Changing both at once would make any regression harder to attribute.</p>
+<p>Larger resolutions, batches, and video require their own acceptance criteria. In particular, a successful film-style still provides no evidence about temporal consistency or video capacity.</p>
+<h2 id="11-what-this-deployment-established">11 What this deployment established</h2>
+<p>The tested 48GB Mac can run both selected Qwen-Image 2.1 quantizations for 1024 text-to-image and the recorded 992 square edit, with MPS diffusion and CPU conditioning/VAE placement. The standard text-to-image observations took roughly 3.4–3.7 minutes of server execution each.</p>
+<p>The main engineering result is the separation of two failures. Moving the VAE to CPU FP32 restored the reference reconstruction; changing the effective square editing dimensions made the full tested edit usable. The first result did not prove the second, and neither established a universal backend fix.</p>
+<p>The same separation applies to the evaluation: a completed request is execution evidence, a normal image is structural evidence, and a successful scene change is task evidence. Keeping those claims tied to their own artifacts makes the installation easier to reproduce, maintain, and reassess when the software changes.</p>
+<h2 id="appendix-model-checksums">Appendix Model checksums</h2>
+<p>These SHA-256 values were verified at download completion. Paths are relative to <code>ComfyUI/models</code>.</p>
+<pre><code class="language-text">diffusion_models/qwen-image-2.1-UC-Q4_K_M.gguf
+e79c8a009f2ecbdb6c70fd663d9aea9ee304a0d91f347e4169a756b8ad141b41
+
+diffusion_models/qwen-image-2.1-UC-Q6_K.gguf
+e14bb312109333b3d73b92ad9b9ac8b29b51f2edca1e7b86d1af1981bf1c4ee3
+
+text_encoders/qwen3vl_8b_int8_convrot.safetensors
+8bfd0f6e12abf2d2d697ecc888e5e90b0d6741d6708f05799f53afa560452e8f
+
+vae/qwen_image_2.1_vae_bf16.safetensors
+bb21f7473051e1ac368515dd3f2e15cd44d7a11748ee8823e1ddca3e4876b7c9
+</code></pre>
+<h2 id="references">References</h2>
+<ol>
+<li><a href="https://github.com/Comfy-Org/ComfyUI">ComfyUI</a>. The experiment's revision is listed in the environment table.</li>
+<li><a href="https://github.com/leejet/ComfyUI-GGUF">leejet ComfyUI-GGUF</a>. The specific fork and revision matter for reproduction.</li>
+<li><a href="https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized">Qwen-Image-2.1-Uncensored-Quantized</a>. The model revision and exact selected files are listed above.</li>
+<li><a href="https://github.com/Comfy-Org/ComfyUI/issues/16433">ComfyUI issue #16433</a>. Related MPS VAE reports and discussion.</li>
+<li><a href="https://github.com/Comfy-Org/ComfyUI/issues/16435">ComfyUI issue #16435</a>. Related reference-latent editing reports and discussion.</li>
+<li><a href="https://github.com/paul-rottger/xstest">XSTest repository</a> and <a href="https://aclanthology.org/2024.naacl-long.301/">NAACL 2024 paper</a>. Background on over-refusal of benign requests.</li>
+<li><a href="https://github.com/ml-research/i2p">Inappropriate Image Prompts</a>. Background on image-content evaluation, not a benchmark executed here.</li>
+</ol>
+<h3 id="experiment-and-editorial-provenance">Experiment and editorial provenance</h3>
+<p>Codex assisted with the local deployment, test automation, visual inspection, and preparation of this English article. Numeric results come from saved local artifacts. The visual judgments are engineering observations from that assisted workflow, not independent human annotations. All image examples shown here were generated locally; they are not photographs of real events. External references were checked on October 20, 2026.</p>
+<nav class="article-footer" aria-label="Continue reading"><a href="../../../en/index.html">All reports</a><a href="https://huggingface.co/datasets/EvanSong2008/qwen-image-2-1-m5-pro-engineering-report">Hugging Face</a><a href="https://github.com/Songhonglei/exp-eval-report/tree/main/reports/qwen-image-2-1">GitHub</a></nav></article></div></main><footer class="site-footer"><span>exp-eval-report</span><span>Conditions, evidence, and conclusions kept together</span><a href="#top">Back to top</a></footer></body></html>

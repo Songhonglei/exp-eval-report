@@ -1,0 +1,49 @@
+{
+  "experiment_date": "2026-10-20",
+  "hardware": "Apple M5 Pro,48GB unified memory,1TB SSD",
+  "macOS": "26.5.1",
+  "Python": "3.12.13 ARM64",
+  "ComfyUI": "0.42.0",
+  "repositories": {
+    "ComfyUI": {
+      "commit": "8f04fd6ecf4a548937971e840af2a985529fab76",
+      "url": "https://github.com/Comfy-Org/ComfyUI.git"
+    },
+    "ComfyUI-GGUF": {
+      "commit": "373048b8403a7820620065210a691263d4da0a61",
+      "url": "https://github.com/leejet/ComfyUI-GGUF.git"
+    }
+  },
+  "packages": {
+    "torch": "2.11.0",
+    "torchvision": "0.26.0",
+    "gguf": "0.19.0",
+    "transformers": "5.20.2",
+    "safetensors": "0.8.0",
+    "comfy-kitchen": "0.2.39",
+    "comfy-aimdo": "0.5.6"
+  },
+  "runtime_arguments": [
+    "--listen",
+    "127.0.0.1",
+    "--port",
+    "8188",
+    "--offline",
+    "--disable-auto-launch",
+    "--disable-all-custom-nodes",
+    "--whitelist-custom-nodes",
+    "ComfyUI-GGUF",
+    "--cache-none",
+    "--preview-method",
+    "none",
+    "--disable-dynamic-vram",
+    "--fp32-vae",
+    "--cpu-vae"
+  ],
+  "placement": {
+    "text_encoder": "cpu",
+    "VAE": "cpu FP32",
+    "diffusion": "MPS"
+  },
+  "scope": "Historical experiment configuration; article production did not run models or change deployment."
+}

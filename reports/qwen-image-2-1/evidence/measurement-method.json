@@ -1,0 +1,36 @@
+{
+  "performance": {
+    "resolution": [
+      1024,
+      1024
+    ],
+    "steps": 25,
+    "seed": 20261020,
+    "cfg": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "batch_size": 1,
+    "time_source": "execution_success.timestamp - execution_start.timestamp",
+    "cold_definition": "ComfyUI unload_models/free_memory request; operating-system disk cache retained.",
+    "followup_definition": "Subsequent execution with cache-none; all workflow nodes recomputed.",
+    "order": "Q4 first, Q6 second; one observation per model/condition.",
+    "q4_followup_memory": "Not reported; controller restarted after scope correction while generation continued."
+  },
+  "visual_probes": {
+    "resolution": [
+      768,
+      768
+    ],
+    "steps": 8,
+    "seed": 20261020
+  },
+  "edit": {
+    "resolution": [
+      992,
+      992
+    ],
+    "steps": 25
+  },
+  "memory": "Approximately 3 second samples; system available and process RSS are distinct, neither is exclusive GPU memory.",
+  "early_runs": "Excluded from performance comparison because of an externally restarted 27B service."
+}

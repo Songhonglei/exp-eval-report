@@ -1,0 +1,5 @@
+phase,requests,method_note
+off,146,98 single-turn requests plus 16 three-turn conversations
+on,8,Eight preselected Chinese cases; different output cap from OFF
+recovery,4,Four benign follow-ups with duplicated prior assistant turns; not clean recovery tests
+on_retry,2,Two retries changed both output cap and input history; not budget-only comparisons
