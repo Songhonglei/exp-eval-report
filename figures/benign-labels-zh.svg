@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-10-20T22:58:41.675094</dc:date>
+    <dc:date>2026-10-20T23:02:58.266188</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -44,7 +44,7 @@ L 548.46 134.312727
 L 548.46 168.523636 
 L 229.68 168.523636 
 z
-" clip-path="url(#p20060410e6)" style="fill: #416aa6"/>
+" clip-path="url(#p499973604f)" style="fill: #416aa6"/>
    </g>
    <g id="patch_4">
     <path d="M 229.68 195.403636 
@@ -52,7 +52,7 @@ L 502.92 195.403636
 L 502.92 229.614545 
 L 229.68 229.614545 
 z
-" clip-path="url(#p20060410e6)" style="fill: #416aa6"/>
+" clip-path="url(#p499973604f)" style="fill: #416aa6"/>
    </g>
    <g id="patch_5">
     <path d="M 229.68 256.494545 
@@ -60,7 +60,7 @@ L 525.69 256.494545
 L 525.69 290.705455 
 L 229.68 290.705455 
 z
-" clip-path="url(#p20060410e6)" style="fill: #416aa6"/>
+" clip-path="url(#p499973604f)" style="fill: #416aa6"/>
    </g>
    <g id="patch_6">
     <path d="M 229.68 317.585455 
@@ -68,7 +68,7 @@ L 502.92 317.585455
 L 502.92 351.796364 
 L 229.68 351.796364 
 z
-" clip-path="url(#p20060410e6)" style="fill: #416aa6"/>
+" clip-path="url(#p499973604f)" style="fill: #416aa6"/>
    </g>
    <g id="patch_7">
     <path d="M 229.68 378.676364 
@@ -76,18 +76,18 @@ L 434.61 378.676364
 L 434.61 412.887273 
 L 229.68 412.887273 
 z
-" clip-path="url(#p20060410e6)" style="fill: #416aa6"/>
+" clip-path="url(#p499973604f)" style="fill: #416aa6"/>
    </g>
    <g id="matplotlib.axis_1">
     <g id="xtick_1">
      <g id="line2d_1">
       <defs>
-       <path id="md76ba650c1" d="M 0 0 
+       <path id="m7221053f7b" d="M 0 0 
 L 0 3.5 
 " style="stroke: #5e6c7c; stroke-width: 0.8"/>
       </defs>
       <g>
-       <use xlink:href="#md76ba650c1" x="229.68" y="426.816" style="fill: #5e6c7c; stroke: #5e6c7c; stroke-width: 0.8"/>
+       <use xlink:href="#m7221053f7b" x="229.68" y="426.816" style="fill: #5e6c7c; stroke: #5e6c7c; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_1">
@@ -139,7 +139,7 @@ z
     <g id="xtick_2">
      <g id="line2d_2">
       <g>
-       <use xlink:href="#md76ba650c1" x="320.76" y="426.816" style="fill: #5e6c7c; stroke: #5e6c7c; stroke-width: 0.8"/>
+       <use xlink:href="#m7221053f7b" x="320.76" y="426.816" style="fill: #5e6c7c; stroke: #5e6c7c; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_2">
@@ -174,7 +174,7 @@ z
     <g id="xtick_3">
      <g id="line2d_3">
       <g>
-       <use xlink:href="#md76ba650c1" x="411.84" y="426.816" style="fill: #5e6c7c; stroke: #5e6c7c; stroke-width: 0.8"/>
+       <use xlink:href="#m7221053f7b" x="411.84" y="426.816" style="fill: #5e6c7c; stroke: #5e6c7c; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_3">
@@ -242,7 +242,7 @@ z
     <g id="xtick_4">
      <g id="line2d_4">
       <g>
-       <use xlink:href="#md76ba650c1" x="502.92" y="426.816" style="fill: #5e6c7c; stroke: #5e6c7c; stroke-width: 0.8"/>
+       <use xlink:href="#m7221053f7b" x="502.92" y="426.816" style="fill: #5e6c7c; stroke: #5e6c7c; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_4">
@@ -296,7 +296,7 @@ z
     <g id="xtick_5">
      <g id="line2d_5">
       <g>
-       <use xlink:href="#md76ba650c1" x="594" y="426.816" style="fill: #5e6c7c; stroke: #5e6c7c; stroke-width: 0.8"/>
+       <use xlink:href="#m7221053f7b" x="594" y="426.816" style="fill: #5e6c7c; stroke: #5e6c7c; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_5">
@@ -1870,8 +1870,38 @@ z
      <use xlink:href="#AvenirNext-Bold-39"/>
     </g>
    </g>
+   <g id="text_17">
+    <!-- 0 -->
+    <g style="fill: #17324a" transform="translate(626.646919 157.351463) scale(0.23 -0.23)">
+     <use xlink:href="#AvenirNext-Bold-30"/>
+    </g>
+   </g>
+   <g id="text_18">
+    <!-- 0 -->
+    <g style="fill: #17324a" transform="translate(626.646919 218.442372) scale(0.23 -0.23)">
+     <use xlink:href="#AvenirNext-Bold-30"/>
+    </g>
+   </g>
+   <g id="text_19">
+    <!-- 0 -->
+    <g style="fill: #17324a" transform="translate(626.646919 279.533281) scale(0.23 -0.23)">
+     <use xlink:href="#AvenirNext-Bold-30"/>
+    </g>
+   </g>
+   <g id="text_20">
+    <!-- 0 -->
+    <g style="fill: #17324a" transform="translate(626.646919 340.62419) scale(0.23 -0.23)">
+     <use xlink:href="#AvenirNext-Bold-30"/>
+    </g>
+   </g>
+   <g id="text_21">
+    <!-- 0 -->
+    <g style="fill: #17324a" transform="translate(626.646919 401.715099) scale(0.23 -0.23)">
+     <use xlink:href="#AvenirNext-Bold-30"/>
+    </g>
+   </g>
   </g>
-  <g id="text_17">
+  <g id="text_22">
    <!-- 60 个正常或授权任务的标签 -->
    <g style="fill: #17324a" transform="translate(51.48 51.730437) scale(0.25 -0.25)">
     <defs>
@@ -2414,7 +2444,7 @@ z
     <use xlink:href="#HiraginoSansGB-W3-7b7e" x="1154.199814"/>
    </g>
   </g>
-  <g id="text_18">
+  <g id="text_23">
    <!-- 中文单轮 / Thinking 关闭 / AI 辅助分类 -->
    <g style="fill: #5e6c7c" transform="translate(51.48 81.075) scale(0.15 -0.15)">
     <defs>
@@ -3230,7 +3260,7 @@ z
     <use xlink:href="#HiraginoSansGB-W3-7c7b" x="1659.324646"/>
    </g>
   </g>
-  <g id="text_19">
+  <g id="text_24">
    <!-- 明确拒绝 -->
    <g style="fill: #17324a" transform="translate(601.6 114.912) scale(0.16 -0.16)">
     <defs>
@@ -3560,36 +3590,6 @@ z
     <use xlink:href="#HiraginoSansGB-W3-786e" x="99.999985"/>
     <use xlink:href="#HiraginoSansGB-W3-62d2" x="199.999969"/>
     <use xlink:href="#HiraginoSansGB-W3-7edd" x="299.999954"/>
-   </g>
-  </g>
-  <g id="text_20">
-   <!-- 0 -->
-   <g style="fill: #17324a" transform="translate(626.171719 157.351463) scale(0.23 -0.23)">
-    <use xlink:href="#AvenirNext-Bold-30"/>
-   </g>
-  </g>
-  <g id="text_21">
-   <!-- 0 -->
-   <g style="fill: #17324a" transform="translate(626.171719 218.442372) scale(0.23 -0.23)">
-    <use xlink:href="#AvenirNext-Bold-30"/>
-   </g>
-  </g>
-  <g id="text_22">
-   <!-- 0 -->
-   <g style="fill: #17324a" transform="translate(626.171719 279.533281) scale(0.23 -0.23)">
-    <use xlink:href="#AvenirNext-Bold-30"/>
-   </g>
-  </g>
-  <g id="text_23">
-   <!-- 0 -->
-   <g style="fill: #17324a" transform="translate(626.171719 340.62419) scale(0.23 -0.23)">
-    <use xlink:href="#AvenirNext-Bold-30"/>
-   </g>
-  </g>
-  <g id="text_24">
-   <!-- 0 -->
-   <g style="fill: #17324a" transform="translate(626.171719 401.715099) scale(0.23 -0.23)">
-    <use xlink:href="#AvenirNext-Bold-30"/>
    </g>
   </g>
   <g id="text_25">
@@ -4203,7 +4203,7 @@ z
   </g>
  </g>
  <defs>
-  <clipPath id="p20060410e6">
+  <clipPath id="p499973604f">
    <rect x="229.68" y="120.384" width="364.32" height="306.432"/>
   </clipPath>
  </defs>
