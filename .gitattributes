@@ -1,0 +1,2 @@
+# Preserve the whitespace emitted by plotting tools in generated vector assets.
+*.svg -whitespace
