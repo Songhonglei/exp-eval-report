@@ -8,10 +8,10 @@ A collection of experiments and evaluation reports on models, skills, and open-s
 
 ## 报告目录 Reports
 
-| 报告 Report | 中文网页 | English page | Hugging Face English material |
-|---|---|---|---|
-| OrcaRouter 6-bit MLX：拒答观察与评测方法 / Refusal observations and evaluation methodology | [阅读](https://songhonglei.github.io/exp-eval-report/reports/orcarouter/zh/) | [Read](https://songhonglei.github.io/exp-eval-report/reports/orcarouter/en/) | [Report and aggregate tables](https://huggingface.co/datasets/EvanSong2008/orcarouter-6bit-mlx-evaluation-notes) |
-| Qwen-Image 2.1：M5 Pro 部署、VAE 排障与 Q4/Q6 对照 / Deployment and diagnostics | [阅读](https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/zh/) | [Read](https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/en/) | [Report and selected evidence](https://huggingface.co/datasets/EvanSong2008/qwen-image-2-1-m5-pro-engineering-report) |
+| 编号 | 对象 | 中文报告 | 英文报告 | HuggingFace Report |
+|---:|---|---|---|---|
+| 1 | OrcaRouter 6-bit MLX | [OrcaRouter 本地拒答行为观察与评测方法反思](https://songhonglei.github.io/exp-eval-report/reports/orcarouter/zh/) | [Evaluating Refusal Behavior in OrcaRouter 6-bit MLX on Apple Silicon](https://songhonglei.github.io/exp-eval-report/reports/orcarouter/en/) | [Read](https://huggingface.co/datasets/EvanSong2008/orcarouter-6bit-mlx-evaluation-notes) |
+| 2 | Qwen-Image 2.1 | [Mac M5 Pro 上 Qwen-Image 2.1 的本地部署与验证](https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/zh/) | [Running Qwen-Image 2.1 on a 48GB Mac M5 Pro](https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/en/) | [Read](https://huggingface.co/datasets/EvanSong2008/qwen-image-2-1-m5-pro-engineering-report) |
 
 OrcaRouter 报告记录 114 个中文案例、160 次请求与评测协议缺陷；英文版是报告翻译，实验语言仍为中文。公开三份汇总 CSV，共 14 行数据，原始会话未公开。
 

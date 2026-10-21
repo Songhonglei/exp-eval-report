@@ -44,8 +44,12 @@ def main():
     assert {r['id'] for r in registry} >= {'orcarouter', 'qwen-image-2-1'}
     assert len([p for p in ROOT.glob('reports/*/report.json')]) == len(registry)
     for report in registry:
+        directory = ROOT/'reports'/report['id']
+        assert json.loads((directory/'report.json').read_text()) == report
         for lang in report['languages']:
             assert (ROOT/f'reports/{report["id"]}/{lang}/index.html').is_file()
+            assert (directory/report['preview'][lang]).is_file()
+        assert (directory/report['evidence']['path']).exists()
         assert report['huggingface'].startswith('https://huggingface.co/')
     orca = ROOT/'reports/orcarouter/data'
     rows = {p.name: list(csv.DictReader(p.open())) for p in orca.glob('*.csv')}
@@ -57,12 +61,19 @@ def main():
         if '.git' in p.parts or '__pycache__' in p.parts or not p.is_file(): continue
         if p.suffix in {'.html', '.json', '.md', '.csv', '.css', '.js', '.svg'}:
             s = p.read_text()
+            if p.suffix == '.md':
+                # Markdown sources and evidence indexes are also public entry points.
+                for link in re.findall(r'!?\[[^\]]*\]\(([^\s)]+)\)', s):
+                    url = urlsplit(link)
+                    if url.scheme or url.netloc or not url.path: continue
+                    if not (p.parent/unquote(url.path)).exists():
+                        errors.append(f'{p.relative_to(ROOT)}: missing Markdown target {link}')
             if '/Users/' in s: errors.append(f'{p.relative_to(ROOT)}: personal absolute path')
             if p.suffix == '.html' and 'https://songhonglei.github.io/orcarouter-local-eval/' in s:
                 errors.append(f'{p.relative_to(ROOT)}: outdated Pages URL')
     if errors:
         raise SystemExit('\n'.join(errors))
-    print(f'PASS: {len(pages)} HTML pages; local links and anchors; bilingual registry; 14 OrcaRouter summary rows; 25 Qwen Image tasks; public-text path checks.')
+    print(f'PASS: {len(pages)} HTML pages; local HTML/Markdown links and anchors; registry matches manifests and assets; 14 OrcaRouter summary rows; 25 Qwen Image tasks; public-text path checks.')
 
 
 if __name__ == '__main__': main()

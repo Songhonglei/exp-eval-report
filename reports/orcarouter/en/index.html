@@ -9,8 +9,8 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="Evaluating Refusal Behavior in OrcaRouter 6-bit MLX on Apple Silicon"><meta property="og:description" content="114 Chinese cases and 160 requests, separating task completion, willingness statements, and protocol limitations."><meta property="og:url" content="https://songhonglei.github.io/exp-eval-report/reports/orcarouter/en/">
 <meta name="theme-color" content="#163b66">
-<link rel="stylesheet" href="../../../assets/site.css">
-<script src="../../../assets/site.js" defer></script>
+<link rel="stylesheet" href="../../../assets/site.css?v=8bf8e720cb11">
+<script src="../../../assets/site.js?v=e83266d681d6" defer></script>
 </head><body id="top">
 <a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../../../en/index.html" class="brand">exp-eval-report</a>
 <nav aria-label="Site navigation">
@@ -43,7 +43,7 @@
 <figure class="report-figure"><a href="../assets/figures/protocols-en.png"><img alt="Two protocols measure different things" src="../assets/figures/protocols-en.png" loading="lazy"></a><figcaption>Figure 1: These protocols cannot be combined into a direct harmful-request refusal rate. <a href="../assets/figures/protocols-en.svg">Open the full-resolution vector figure</a></figcaption></figure>
 <h2 id="section-1">Model and runtime configuration</h2>
 <p>The experiments ran on October 20, 2026, on a single local machine.</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Item</th>
@@ -95,7 +95,7 @@
 <p>The 114 cases comprised 98 single-turn cases and 16 three-turn conversations. Each of the four topic areas contributed 24 cases; the general baseline contributed 18.</p>
 <p>Twelve cases were selected from <a href="https://github.com/paul-rottger/xstest">XSTest</a>, two from <a href="https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors">JailbreakBench JBB-Behaviors</a>, and 100 were project-authored. Source identifiers and translation markers were retained for the selected public cases. Their Chinese versions were project translations.</p>
 <p>These were deliberately selected diagnostic cases, not a random sample or a reproduction of either full benchmark. Local snapshots of the selected texts were retained, but the upstream dataset commits were not pinned.</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Phase</th>
@@ -141,7 +141,7 @@
 <p>The labels distinguish explicit refusal, clarification, acceptance without execution, incomplete answers, and missing final answers. An AI assistant assigned the labels from the final outputs. There has been no independent human annotation or inter-rater agreement study.</p>
 <h2 id="section-4">No explicit refusals among 60 benign or authorized single-turn tasks</h2>
 <p>With Thinking disabled, the existing labels give the following counts. Five additional cases specifically requested clarification questions and are excluded from this table.</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Domain</th>
@@ -187,7 +187,7 @@
 <figure class="report-figure"><a href="../assets/figures/benign-labels-en.png"><img alt="Labels for 60 benign or authorized tasks" src="../assets/figures/benign-labels-en.png" loading="lazy"></a><figcaption>Figure 3: Five clarification-only cases are excluded; labels have not received independent human review. <a href="../assets/figures/benign-labels-en.svg">Open the full-resolution vector figure</a></figcaption></figure>
 <h2 id="section-5">Willingness statements differed across domains</h2>
 <p>The 33 single-turn willingness probes with Thinking disabled produced these labels:</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Domain</th>
@@ -247,7 +247,7 @@
 <figure class="report-figure"><a href="../assets/figures/willingness-counts-en.png"><img alt="33 willingness probes, different stated choices" src="../assets/figures/willingness-counts-en.png" loading="lazy"></a><figcaption>Figure 4: 19 decline, 4 accept, 10 clarify; AI-assisted classifications without independent human review. <a href="../assets/figures/willingness-counts-en.svg">Open the full-resolution vector figure</a></figcaption></figure>
 <h2 id="section-6">Thinking comparisons were small and confounded</h2>
 <p>Eight single-turn cases were selected in advance for a Thinking-enabled comparison. Three willingness probes produced final statements in both modes and changed category:</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Case type</th>
@@ -297,7 +297,7 @@
 <p>Independent human review should calibrate the distinction between refusal, clarification, acceptance without execution, and partial completion. Reporting agreement between reviewers would make the classifications easier to assess.</p>
 <p>Future comparisons across weights or engines should document quantization, templates, decoding settings, and runtime conditions. Pinning dataset versions and releasing a selected, documented evaluation package would also improve reproducibility. These are proposed follow-up steps, not experiments completed in this run.</p>
 <h2 id="section-10">Data availability and AI assistance</h2>
-<p>The <a href="https://songhonglei.github.io/exp-eval-report/reports/orcarouter/en/">English GitHub Pages edition</a> and <a href="https://songhonglei.github.io/exp-eval-report/reports/orcarouter/zh/">Chinese illustrated report</a> and its <a href="https://github.com/Songhonglei/exp-eval-report">article repository on GitHub</a> accompany this English edition. Both incorporate the reviewed corrections to request logging, budget retries, and benign follow-ups. The <a href="https://huggingface.co/datasets/EvanSong2008/orcarouter-6bit-mlx-evaluation-notes">Hugging Face repository</a> provides both reports, figures, and three aggregate CSV tables (14 summary rows). These publications do not include the full prompt-level evaluation dataset or a runnable reproduction package.</p>
+<p>This report is available in <a href="https://songhonglei.github.io/exp-eval-report/reports/orcarouter/en/">English</a> and <a href="https://songhonglei.github.io/exp-eval-report/reports/orcarouter/zh/">Chinese</a> on GitHub Pages, with article sources in the <a href="https://github.com/Songhonglei/exp-eval-report">GitHub repository</a>. Both language editions incorporate the reviewed corrections to request logging, budget retries, and benign follow-ups. The <a href="https://huggingface.co/datasets/EvanSong2008/orcarouter-6bit-mlx-evaluation-notes">Hugging Face repository</a> provides both reports, figures, and three aggregate CSV tables (14 summary rows). These publications do not include the full prompt-level evaluation dataset or a runnable reproduction package.</p>
 <p>API responses, final answers, labels, configuration records, and file hashes are archived locally. The main-run request fields have the history-logging defect described above and are not faithful wire-level request snapshots. The raw evaluation records are not currently available for public download. This article contains aggregate results and a few non-operational examples; it does not publish model reasoning traces.</p>
 <p>An AI assistant helped prepare cases, execute the local tests, assign labels, review the records, and edit and translate the report. The labels have not received independent human review. File-integrity checks establish consistency of the retained bytes, not correct request logging, experimental control, model quality, safety, or annotation correctness.</p>
 <p>XSTest is distributed under <a href="https://github.com/paul-rottger/xstest/blob/main/LICENSE">CC BY 4.0</a>, and JBB-Behaviors under the <a href="https://huggingface.co/datasets/JailbreakBench/JBB-Behaviors">MIT license</a>. Source identifiers and project-translation markers are retained in the local case records. No English-language run, cross-model comparison, or full public-benchmark reproduction is reported here.</p>

@@ -58,12 +58,12 @@
 
 模型下载固定在仓库提交 `7959e658915f52274897fb573ffeda49de8dc16b`，只选择四个文件，没有下载整个仓库。
 
-| 用途 | 文件名 | 实际大小，十进制 GB |
-|---|---|---:|
-| Q4 扩散主体 | `qwen-image-2.1-UC-Q4_K_M.gguf` | 4.605 |
-| Q6 扩散主体 | `qwen-image-2.1-UC-Q6_K.gguf` | 5.877 |
-| 文本编码器 | `qwen3vl_8b_int8_convrot.safetensors` | 9.351 |
-| VAE | `qwen_image_2.1_vae_bf16.safetensors` | 0.676 |
+| 用途 | 文件名 | 实际大小，字节 | 十进制 GB |
+|---|---|---:|---:|
+| Q4 扩散主体 | `qwen-image-2.1-UC-Q4_K_M.gguf` | 4,604,558,112 | 4.605 |
+| Q6 扩散主体 | `qwen-image-2.1-UC-Q6_K.gguf` | 5,876,556,576 | 5.877 |
+| 文本编码器 | `qwen3vl_8b_int8_convrot.safetensors` | 9,350,798,360 | 9.351 |
+| VAE | `qwen_image_2.1_vae_bf16.safetensors` | 675,509,688 | 0.676 |
 
 四个文件合计 20,507,422,736 字节，约 20.51GB。Q4、Q6 共用文本编码器和 VAE，二者是可替换的扩散主体，不需要同时加载。下载器采用 HTTPS Range 和分块检查点续传，完成后核对文件大小及完整 SHA-256；哈希同时与仓库 LFS 元数据和 `SHA256SUMS` 比对。GGUF 与 Safetensors 的头部和张量偏移也做了静态检查。
 
@@ -312,7 +312,7 @@ qwenctl stop
 
 ## 9 让另一位工程师能够复核
 
-附件保留四份 API 工作流、软件版本和模型清单、VAE 回环指标、25 个任务的摘要，以及 20 个正常敏感样例的提示词和视觉检查备注。工作流 JSON 是提交到 ComfyUI `/prompt` 接口时的 `prompt` 对象；修改模型文件参数即可在相同图结构中选择 Q4 或 Q6。设备分配和启动参数也应保持一致，不能只复制提示词和种子就称为同条件复现。
+附件保留六份 API 工作流（四份文生图/编辑图、实际失败的 1024 编辑图及 VAE 回环诊断图）、软件版本和模型清单、VAE 回环指标、25 个任务的摘要，以及两种量化版本共 20 次正常敏感样例运行的提示词和视觉检查备注。这 20 次运行对应 10 个配对案例，不是 20 个独立提示词。工作流 JSON 是提交到 ComfyUI `/prompt` 接口时的 `prompt` 对象；修改模型文件参数即可在相同图结构中选择 Q4 或 Q6。设备分配和启动参数也应保持一致，不能只复制提示词和种子就称为同条件复现。
 
 复核时应先验证文件与依赖，再检查 VAE 回环，然后运行文生图和完整编辑。对于本文所涉异常，回环重建、1024 编辑失败和 992 编辑成功分别回答不同问题，任何一个结果都不能代替其他环节。升级依赖、调整后端、换参考比例或增加参考图后，旧的通过记录只能作为比较基线。
 
@@ -324,6 +324,8 @@ qwenctl stop
 |---|---|---|
 | 1024 文生图 | [Q4 文生图 JSON](evidence/workflows/qwen-image-2.1-Q4_K_M-t2i.api.json) | [Q6 文生图 JSON](evidence/workflows/qwen-image-2.1-Q6_K-t2i.api.json) |
 | 992 图片编辑 | [Q4 编辑 JSON](evidence/workflows/qwen-image-2.1-Q4_K_M-image_edit.api.json) | [Q6 编辑 JSON](evidence/workflows/qwen-image-2.1-Q6_K-image_edit.api.json) |
+
+另外两份诊断工作流为 [1024 Q4 编辑失败图](evidence/workflows/q4-edit-1024-failed.api.json)和 [VAE 回环图](evidence/workflows/vae-roundtrip.api.json)。回环图来自 MPS BF16 诊断输出；VAE 设备与精度由启动参数控制，需按正文分别设置三种条件。
 
 另附九张保留原尺寸、原像素值的茶壶实验图像，包括[参考图](evidence/images/reference.png)、三张 VAE 回环重建、两张首轮文生图和三张编辑结果。对应关系见 [image-evidence.json](evidence/image-evidence.json)。这些文件移除了内嵌 PNG 元数据，实验参数通过上述记录与工作流另行提供；它们是关键技术证据的子集，并非 25 张输出的完整导出。
 

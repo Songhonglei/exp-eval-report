@@ -9,8 +9,8 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="Running Qwen-Image 2.1 on a 48GB Mac M5 Pro"><meta property="og:description" content="Q4 and Q6 observations, VAE round-trip diagnostics, the 992 editing workaround, and 25 follow-up tasks."><meta property="og:url" content="https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/en/">
 <meta name="theme-color" content="#163b66">
-<link rel="stylesheet" href="../../../assets/site.css">
-<script src="../../../assets/site.js" defer></script>
+<link rel="stylesheet" href="../../../assets/site.css?v=8bf8e720cb11">
+<script src="../../../assets/site.js?v=e83266d681d6" defer></script>
 </head><body id="top">
 <a class="skip" href="#main">Skip to content</a><header class="site-header"><a href="../../../en/index.html" class="brand">exp-eval-report</a>
 <nav aria-label="Site navigation">
@@ -48,7 +48,7 @@
 <p>The machine already hosted a 27B text model. The image project needed its own dependencies and a controlled way to share the machine without overlapping two large workloads. A successful installation therefore meant more than producing one image: the environment had to remain isolated, the workflows had to be reproducible, and service switching had to respect active work.</p>
 <p>The weights came from <a href="https://huggingface.co/abenzerps/Qwen-Image-2.1-Uncensored-Quantized">abenzerps/Qwen-Image-2.1-Uncensored-Quantized</a>. “Uncensored” is the distributor's release name. It is retained here to identify the exact files, rather than treated as an experimentally established property of every possible request.</p>
 <p>Acceptance was separated into five layers:</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Layer</th>
@@ -87,7 +87,7 @@
 <p>These distinctions also determine the next diagnostic step. A hash mismatch belongs in the download investigation. A severely corrupted VAE reconstruction calls for a smaller computation graph. A plausible image that ignores a background edit calls for investigation of the editing conditions. Repeatedly changing the seed would obscure those differences.</p>
 <h2 id="2-the-pinned-environment-and-model-artifacts">2 The pinned environment and model artifacts</h2>
 <p>The hardware was an Apple M5 Pro Mac with 48GB unified memory and a 1TB SSD, running macOS 26.5.1. ComfyUI used a dedicated ARM64 Python environment, separate from the existing MTPLX, MLX-VLM, and MLX environments.</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Component</th>
@@ -136,7 +136,7 @@
 <p>The model card's setup instructions and the installed source were checked for Qwen-Image 2.1 support before choosing the GGUF implementation. This experiment used the <a href="https://github.com/leejet/ComfyUI-GGUF">leejet fork</a>, alongside <a href="https://github.com/Comfy-Org/ComfyUI">ComfyUI</a>. Results from a different fork or dependency stack should be identified separately.</p>
 <h3 id="download-only-the-required-files">Download only the required files</h3>
 <p>The model repository was pinned to revision <code>7959e658915f52274897fb573ffeda49de8dc16b</code>. Four files were selected rather than downloading the entire repository.</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Role</th>
@@ -202,7 +202,7 @@
 </code></pre>
 <p>A VAE is lossy, so exact pixel equality is not expected. Severe embossing or noise after this short path, however, indicates that a full edit is already receiving or producing a damaged representation somewhere in the VAE round trip.</p>
 <p>For the same 1024×1024 reference, MSE was calculated over decoded RGB values in the 0–255 range. PSNR was calculated as <code>10 × log10(255² / MSE)</code>.</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>VAE configuration</th>
@@ -247,7 +247,7 @@ preserve the subject and composition.
 <p><a href="https://github.com/Comfy-Org/ComfyUI/issues/16435">Issue #16435</a> describes a related reference-latent editing failure. Its later discussion emphasizes the effective grid produced by the node, rather than only the literal <code>resolution</code> setting. This project did not reproduce its full size sweep or confirm a chunk-boundary explanation. Here, 992 is a tested workaround for the recorded square input.</p>
 <h3 id="record-the-effective-dimensions">Record the effective dimensions</h3>
 <p>In the installed <code>TextEncodeQwenImage21</code> implementation, reference dimensions are calculated from the aspect ratio and rounded to multiples of 32. The output latent has spatial dimensions <code>height // 16</code> and <code>width // 16</code>. For the square cases:</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Image dimensions</th>
@@ -272,7 +272,7 @@ preserve the subject and composition.
 <p>The 992 image has 3.125% fewer pixels along each side and about 6.15% fewer pixels overall. Fine text and thin structures have less spatial resolution. Resizing the result to 1024 changes its dimensions without recovering the original sampling resolution. Masks, annotations, and pixel-aligned compositing would need matching transforms.</p>
 <p>The tested workflows therefore use <strong>1024 for text-to-image and 992 for square editing</strong>. Text-to-image does not exercise the same reference-encoding path, so the editing observation did not justify reducing every task's dimensions.</p>
 <h3 id="keep-the-reference-and-sampling-canvas-consistent">Keep the reference and sampling canvas consistent</h3>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Stage</th>
@@ -306,7 +306,7 @@ preserve the subject and composition.
 <p>In an edit, changing the conditioning resolution while independently constructing a different sampling canvas can break that correspondence. Reproducing the graph connections matters as much as reproducing the seed.</p>
 <h2 id="5-what-the-workarounds-cost">5 What the workarounds cost</h2>
 <figure class="report-figure"><a href="../assets/figures/en/03-pipeline.png"><img alt="CPU conditioning, MPS diffusion, and CPU VAE decoding" src="../assets/figures/en/03-pipeline.png" loading="lazy"></a><figcaption>Figure 3. Device placement in the final workflow. Reference VAE encoding is present only for editing. CPU and GPU share the machine's unified memory.</figcaption></figure>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Setting</th>
@@ -332,7 +332,7 @@ preserve the subject and composition.
 <p>Neither workaround validates the other. A clean CPU round trip does not fix every editing shape; a successful 992 edit does not demonstrate that MPS VAE encoding is repaired. ComfyUI and plugin source were left unpatched. When assessing a future upgrade, these settings should be relaxed separately so that a regression can be attributed to the changed variable.</p>
 <h2 id="6-q4-and-q6-timing-observations">6 Q4 and Q6 timing observations</h2>
 <p>The four text-to-image timing runs used the same conditions:</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Parameter</th>
@@ -376,7 +376,7 @@ soft morning light, detailed natural photography.
 </code></pre>
 <p>For each quantization, the first run followed a ComfyUI model-unload request. The operating system's disk cache was retained. The second run was a subsequent execution with node caching disabled. These conditions are described explicitly because they are neither a fully cold machine nor an idealized fully cached hot run.</p>
 <p>Server execution time is the difference between the saved <code>execution_start</code> and <code>execution_success</code> timestamps. It covers task execution, including preparation, sampling, decoding, and saving. It excludes waiting before execution and the client's later polling delay. Sampling time comes separately from whole-second progress logs.</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Model</th>
@@ -444,7 +444,7 @@ soft morning light, detailed natural photography.
 <h2 id="7-observing-benign-sensitive-content-requests">7 Observing benign sensitive-content requests</h2>
 <p>The content observations used 10 original prompts per quantization, each at 768×768, eight steps, and seed <code>20261020</code>, with the other sampling settings unchanged. They explored whether benign requests containing potentially sensitive subjects or wording would produce visible refusal behavior.</p>
 <p>The classification was informed by the benign-request over-refusal work in <a href="https://github.com/paul-rottger/xstest">XSTest</a> and the image-evaluation context of <a href="https://github.com/ml-research/i2p">I2P</a>. Neither benchmark was reproduced, and no official benchmark score is reported.</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Category</th>
@@ -498,7 +498,7 @@ soft morning light, detailed natural photography.
 <p>All 20 images completed generation. The recorded image-by-image inspection found no visible explicit refusal or blank output. It also found instruction and quality limitations: distorted cybersecurity text, extra limbs in a character image, unclear historical labels, and omitted or poorly rendered AI labels in portraits.</p>
 <p>Those are different outcomes. A missing year does not establish the reason it was omitted. A completed image does not establish that the requested subject or text was represented accurately. A named portrait was not subjected to facial identity verification, and character generation says nothing about authorization to use the result.</p>
 <p>The observation scheme separated:</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Observation</th>
@@ -569,7 +569,7 @@ qwenctl stop
 <p>Keep server execution time, sampler logs, and client latency in separate fields. Recovering execution timestamps after a monitoring interruption does not recover the missing memory trace. That is why the Q4 subsequent run has a timing result but no full-run memory result.</p>
 <h2 id="10-the-next-regression-tests">10 The next regression tests</h2>
 <p>The following work remains outside the completed 25-task batch:</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="Data table"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="Scroll sideways to view the table" aria-label="Data table; Scroll sideways to view the table"><table>
 <thead>
 <tr>
 <th>Direction</th>

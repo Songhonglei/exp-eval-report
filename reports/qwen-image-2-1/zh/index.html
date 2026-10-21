@@ -9,8 +9,8 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="Mac M5 Pro 上 Qwen-Image 2.1 的本地部署与验证"><meta property="og:description" content="Q4 与 Q6 实测、VAE 回环诊断、992 编辑规避方案与 25 个后续生成任务。"><meta property="og:url" content="https://songhonglei.github.io/exp-eval-report/reports/qwen-image-2-1/zh/">
 <meta name="theme-color" content="#163b66">
-<link rel="stylesheet" href="../../../assets/site.css">
-<script src="../../../assets/site.js" defer></script>
+<link rel="stylesheet" href="../../../assets/site.css?v=8bf8e720cb11">
+<script src="../../../assets/site.js?v=e83266d681d6" defer></script>
 </head><body id="top">
 <a class="skip" href="#main">跳到正文</a><header class="site-header"><a href="../../../index.html" class="brand">exp-eval-report</a>
 <nav aria-label="网站导航">
@@ -54,7 +54,7 @@
 <h3 id="11">1.1 把“能用”改写成可检查的交付条件</h3>
 <p>这不是一台专用测试机。既有文本模型已经完成部署，图像项目需要在同一台机器上长期共存。于是，安装成功还必须包含环境可分离、服务可切换、工作流可复核三个条件。若一次生图依赖临时修改全局 Python，或者每次启动都要手动猜测哪些进程可以结束，即使图片正常，也还没有形成稳定的工程交付。</p>
 <p>本次按下表组织验收。每一层都有独立证据，也有它不能回答的问题。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>验收层次</th>
@@ -94,7 +94,7 @@
 <h2 id="2">2 固定环境和模型文件</h2>
 <p>实验硬件为 M5 Pro Mac，统一内存 48GB、SSD 1TB，操作系统为 macOS 26.5.1。扩散采样使用 PyTorch MPS 后端；最终验收配置把文本编码器和 VAE 放在 CPU 上。图像项目独立使用 Python 虚拟环境，不与 MTPLX、MLX-VLM 或 MLX 共用依赖。</p>
 <h3 id="21">2.1 先固定软件，再固定权重</h3>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>组件</th>
@@ -142,33 +142,38 @@
 </table></div>
 <p>固定提交比“安装最新版”更便于复核。GGUF 插件的选择依据是模型发行说明和已安装源码对 <code>qwen_image21</code> 架构的支持；这里使用的是上述分支，不应把不同 GGUF 实现或不同依赖版本的结果混在一起。<a href="https://github.com/Comfy-Org/ComfyUI">ComfyUI</a> · <a href="https://github.com/leejet/ComfyUI-GGUF">GGUF 插件</a></p>
 <p>模型下载固定在仓库提交 <code>7959e658915f52274897fb573ffeda49de8dc16b</code>，只选择四个文件，没有下载整个仓库。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>用途</th>
 <th>文件名</th>
-<th style="text-align: right;">实际大小，十进制 GB</th>
+<th style="text-align: right;">实际大小，字节</th>
+<th style="text-align: right;">十进制 GB</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Q4 扩散主体</td>
 <td><code>qwen-image-2.1-UC-Q4_K_M.gguf</code></td>
+<td style="text-align: right;">4,604,558,112</td>
 <td style="text-align: right;">4.605</td>
 </tr>
 <tr>
 <td>Q6 扩散主体</td>
 <td><code>qwen-image-2.1-UC-Q6_K.gguf</code></td>
+<td style="text-align: right;">5,876,556,576</td>
 <td style="text-align: right;">5.877</td>
 </tr>
 <tr>
 <td>文本编码器</td>
 <td><code>qwen3vl_8b_int8_convrot.safetensors</code></td>
+<td style="text-align: right;">9,350,798,360</td>
 <td style="text-align: right;">9.351</td>
 </tr>
 <tr>
 <td>VAE</td>
 <td><code>qwen_image_2.1_vae_bf16.safetensors</code></td>
+<td style="text-align: right;">675,509,688</td>
 <td style="text-align: right;">0.676</td>
 </tr>
 </tbody>
@@ -181,7 +186,7 @@
 <p>因此，不能用“48GB 减去四个文件大小”推算剩余可用内存，也不能把两个扩散主体的磁盘体积相加，当作正常单次任务的常驻开销。本项目的调度单位是一次选择一种主体的工作流。文本模型与图像服务的串行管理，则进一步降低了两个大型任务同时占用资源的机会。</p>
 <h3 id="23">2.3 文生图和图片编辑共享哪些节点</h3>
 <p>四份交付工作流由相同的加载、采样和保存节点组成，关键区别在参考条件与初始 latent 的来源。这里的 latent 是模型采样所处理的中间表示；它的尺寸必须与参考条件对应，不能只按最终 PNG 的期望大小随意设置。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>环节</th>
@@ -217,7 +222,7 @@
 <p>完整编辑链路同时涉及参考图预处理、文本与视觉条件编码、扩散采样、VAE 解码。出现异常时，直接更换提示词或量化版本，会让定位变量迅速增多。</p>
 <p>本次先移除扩散模型和文本编码器，仅保留“读入同一张参考图 → VAE 编码 → VAE 解码 → 保存”的回环。这个实验不要求重建图逐像素完全等于输入，但足以判断 VAE 是否已把正常参考图编码成严重失真的表示。</p>
 <p>对同一张 1024×1024 参考图，按 RGB 通道计算均方误差。像素取值范围为 0—255，PSNR 定义为 <code>10 × log10(255² / MSE)</code>。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>VAE 运行配置</th>
@@ -250,7 +255,7 @@
 <p>这个回环实验的价值在于移除了最容易引入解释分歧的变量。没有提示词，就不能把浮雕状失真归因于模型误解了“花园”；没有扩散主体，就不能用扩散主体的量化精度解释这个回环异常。MPS FP32 与 MPS BF16 的结果又十分接近，说明对这个输入简单提高运算精度没有解决问题。CPU FP32 恢复正常，为选择可用后端提供了直接证据。</p>
 <p>但设备切换仍可能同时改变多项底层执行细节。回环没有分别隔离编码器和解码器，也没有逐算子比对，所以证据应停在“VAE 后端路径存在可复现差异”这一层。要证明具体算子、内存布局或框架实现是根因，还需要更小的算子复现和对应版本的对照；本文没有完成这一步。</p>
 <p>PSNR 也需要结合实验目的理解。它衡量重建图相对同一参考图的像素误差，适合本次回环对照；它不衡量构图美感、人物身份，也不适合用来判断一张成功更换背景的编辑图是否应该与原图相似。对于编辑任务，背景本来就应该发生变化，高像素相似度反而可能来自没有执行编辑指令。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>当前证据</th>
@@ -290,7 +295,7 @@
 <h2 id="5">5 两项规避方案的实际代价</h2>
 <p>最终链路的计算分工如下。图片编辑增加参考 VAE 编码；文生图没有这一步，但最终解码同样受 CPU VAE 设置影响。</p>
 <figure class="report-figure"><a href="../assets/figures/zh/03-pipeline.svg"><img alt="最终工作流的 CPU 与 MPS 分工" src="../assets/figures/zh/03-pipeline.svg" loading="lazy"></a><figcaption>图 3　计算分工示意。CPU 和 GPU 使用同一套统一内存；图中的分工不代表两套独立容量。</figcaption></figure>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>规避设置</th>
@@ -324,7 +329,7 @@
 </blockquote>
 <p>文本编码器在 CPU 运行，VAE 使用 CPU FP32，扩散采样使用 MPS。保留 <code>--cache-none</code>，每轮重算工作流节点。第一轮在请求卸载 ComfyUI 模型后执行，不清除操作系统磁盘缓存；第二轮是随后运行，不应称为所有节点和模型都已缓存的“纯热启动”。</p>
 <p>服务端执行时间统一取任务历史中 <code>execution_start</code> 到 <code>execution_success</code> 的时间差，包含编码、加载、采样、解码与保存等任务内开销，不包含客户端轮询确认的额外等待。采样时间单独取自进度日志，按整秒记录。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>模型</th>
@@ -374,7 +379,7 @@
 <p>在具备完整内存观测的 24 个任务中，最低采样系统可用内存约为 14.98GiB，发生于 Q6 编辑；未观察到相对各任务采样起点的新增交换占用。另有一轮 Q4 后续任务采样不完整，不纳入这项内存结论。这不代表系统原先没有交换占用。系统可用内存与进程 RSS 也不能解释为独立显存或相加得到模型内存峰值。</p>
 <h3 id="61">6.1 把总耗时与采样时间分开解释</h3>
 <p>用服务端总耗时减去日志中的采样时间，可以得到约 30.8—36.0 秒的非采样合计；由于采样日志只记录到整秒，这个差额也只有相应的近似精度。它包含模型与条件准备、编码、解码、保存和其他节点开销，不能全部记在 VAE 名下。Q6 编辑的同类差额约为 62.7 秒，编辑链路增加了参考处理，但现有日志仍不足以逐项归因。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>计时口径</th>
@@ -406,7 +411,7 @@
 <p>“没有新增交换占用”采用各任务采样起点作为基线。机器既有交换占用不会因这个结论自动清零；交换占用的差额为零，也不能证明任务期间完全没有页读写。本文能报告的是已采到的容量变化，不是完整的内存活动追踪。</p>
 <h3 id="63-q4-q6">6.3 Q4 与 Q6 应该在哪里选择</h3>
 <p>本项目同时安装两个主体，但选择发生在工作流的 <code>UnetLoaderGGUF.inputs.unet_name</code>，不发生在 <code>qwenctl switch image</code>。加载 Q4 工作流就请求 Q4，加载 Q6 工作流就请求 Q6；二者共用编码器和 VAE，其他参数可以保持一致。首次对照时必须确认该字段，而不能仅依赖输出文件名中的 Q4/Q6 前缀。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>使用情形</th>
@@ -435,7 +440,7 @@
 <p>这组实验没有得出 Q6 在所有画面上更清晰、更快或更值得默认使用的结论。实际决策应围绕目标图片：两者都能完成任务时，选择可以依据已有工作流和资源约束；只有在更多有代表性的对照中观察到稳定收益，才有依据把更大的主体设为默认。</p>
 <h2 id="7">7 正常敏感视觉样例的拒绝观察</h2>
 <p>性能对照之外，为每种量化版本各安排 10 个自编视觉样例，固定 768×768、8 步、种子 20261020，其余采样设置不变。分类思路参考 XSTest 对正常敏感请求误拒的研究，以及 I2P 的图像内容评测背景；没有直接运行这两个基准，也不报告它们的官方分数。<a href="https://github.com/paul-rottger/xstest">XSTest</a> · <a href="https://github.com/ml-research/i2p">I2P</a></p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>样例类别</th>
@@ -491,7 +496,7 @@
 <p>现有八节点工作流没有显式安全检查节点，这是管线配置观察，不是“全面无审查”的证明。10 个定向样例不是随机样本，游戏措辞对照又具有相关性；两种量化各运行一次，也不等于取得 20 个相互独立的内容案例。因此结果表述为“在已检查的正常敏感样例中未观察到显式拒绝”，不据此估计总体拒绝率。</p>
 <h3 id="71">7.1 把拒绝、失败和语义偏差分开标注</h3>
 <p>图像系统不像对话系统那样总会给出一段拒绝文字。本次逐图视觉检查同时查看执行状态和可见输出：技术报错单独记录，空白或近乎均匀图像单独记录，图像中的明确拒绝表达单独记录，内容有生成但没有覆盖要求则归入指令遵循问题。输出一幅正常场景，却遗漏了特定年代或标识，不能只凭遗漏判断其内部动机。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>观察类型</th>
@@ -547,11 +552,11 @@ qwenctl stop
 <p>保护也有范围。管理器能够约束经过它执行的操作，无法阻止用户从另一个终端、桌面工具或自动任务直接启动文本模型。早期资源重叠记录已经说明，这个边界具有实际意义。正式测量前应确认运行环境；发生意外重叠后，应保留原记录并从干净条件重新安排对照，不宜把混入竞争负载的数据与后续结果平均。</p>
 <p>服务就绪还有两个时间点：HTTP 可访问表示 ComfyUI 已能接收请求，第一份工作流真正执行时才发生相应图像权重加载与推理。因此，<code>qwenctl test image</code> 通过后仍需真实生成才能完成模型验收。把轻量健康检查与重任务分开，也方便日常查看服务时避免意外触发数分钟的模型计算。</p>
 <h2 id="9">9 让另一位工程师能够复核</h2>
-<p>附件保留四份 API 工作流、软件版本和模型清单、VAE 回环指标、25 个任务的摘要，以及 20 个正常敏感样例的提示词和视觉检查备注。工作流 JSON 是提交到 ComfyUI <code>/prompt</code> 接口时的 <code>prompt</code> 对象；修改模型文件参数即可在相同图结构中选择 Q4 或 Q6。设备分配和启动参数也应保持一致，不能只复制提示词和种子就称为同条件复现。</p>
+<p>附件保留六份 API 工作流（四份文生图/编辑图、实际失败的 1024 编辑图及 VAE 回环诊断图）、软件版本和模型清单、VAE 回环指标、25 个任务的摘要，以及两种量化版本共 20 次正常敏感样例运行的提示词和视觉检查备注。这 20 次运行对应 10 个配对案例，不是 20 个独立提示词。工作流 JSON 是提交到 ComfyUI <code>/prompt</code> 接口时的 <code>prompt</code> 对象；修改模型文件参数即可在相同图结构中选择 Q4 或 Q6。设备分配和启动参数也应保持一致，不能只复制提示词和种子就称为同条件复现。</p>
 <p>复核时应先验证文件与依赖，再检查 VAE 回环，然后运行文生图和完整编辑。对于本文所涉异常，回环重建、1024 编辑失败和 992 编辑成功分别回答不同问题，任何一个结果都不能代替其他环节。升级依赖、调整后端、换参考比例或增加参考图后，旧的通过记录只能作为比较基线。</p>
 <h3 id="91">9.1 最小复现需要交付什么</h3>
 <p>素材包的 <a href="../evidence/environment.json">environment.json</a> 记录依赖、仓库提交、启动参数和设备分工；<a href="../evidence/model-manifest.json">model-manifest.json</a> 记录固定模型版本、大小和哈希。<a href="../evidence/task-summary.csv">task-summary.csv</a> 保留任务耗时和资源观测，<a href="../evidence/visual-cases.json">visual-cases.json</a> 保留正常敏感样例的原提示与视觉检查备注，<a href="../evidence/vae-roundtrip.csv">vae-roundtrip.csv</a> 保留回环原始指标。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>API 工作流</th>
@@ -572,6 +577,7 @@ qwenctl stop
 </tr>
 </tbody>
 </table></div>
+<p>另外两份诊断工作流为 <a href="../evidence/workflows/q4-edit-1024-failed.api.json">1024 Q4 编辑失败图</a>和 <a href="../evidence/workflows/vae-roundtrip.api.json">VAE 回环图</a>。回环图来自 MPS BF16 诊断输出；VAE 设备与精度由启动参数控制，需按正文分别设置三种条件。</p>
 <p>另附九张保留原尺寸、原像素值的茶壶实验图像，包括<a href="../evidence/images/reference.png">参考图</a>、三张 VAE 回环重建、两张首轮文生图和三张编辑结果。对应关系见 <a href="../evidence/image-evidence.json">image-evidence.json</a>。这些文件移除了内嵌 PNG 元数据，实验参数通过上述记录与工作流另行提供；它们是关键技术证据的子集，并非 25 张输出的完整导出。</p>
 <p>文章图版用于快速比对，数值复核则应使用上述原始记录。排版图经过完整缩放展示，不能拿图版的像素重新计算回环 PSNR。正式素材包也不包含数十 GB 权重、虚拟环境和带有个人路径的完整运行日志；读者需要按固定仓库提交自行取得模型文件。</p>
 <h3 id="92">9.2 按依赖顺序复核，而不是一次跑完</h3>
@@ -590,7 +596,7 @@ qwenctl stop
 <p>同样，完整任务耗时、客户端等待和采样日志不能混成一列。资源监控器中断后恢复任务历史，可以补回服务端时间，却不能凭结束时的一次内存读数补出全程峰值。本次 Q4 随后运行明确缺失内存报告，正是这种证据边界的具体处理。</p>
 <h2 id="10">10 下一轮如何扩大验证范围</h2>
 <p>当前交付证明了一条固定链路可用，还没有覆盖通用生产负载。后续应优先扩大最可能改变结论的变量，而不是只增加同一茶壶提示的重复展示。下表为建议的回归计划，均不计入本文已经完成的 25 个生成任务。</p>
-<div class="table-wrap" role="region" tabindex="0" aria-label="数据表"><table>
+<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="表格可左右滑动" aria-label="数据表；表格可左右滑动"><table>
 <thead>
 <tr>
 <th>扩展方向</th>

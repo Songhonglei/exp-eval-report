@@ -2,6 +2,7 @@
 from pathlib import Path
 from html import escape
 from urllib.parse import urlsplit
+import hashlib
 import json
 import posixpath
 import re
@@ -20,6 +21,11 @@ def relative(target, page):
     trailing = target.endswith('/')
     result = posixpath.relpath(target.rstrip('/'), str(Path(page).parent))
     return result + ('/' if trailing else '')
+
+
+def asset_url(target, page):
+    version = hashlib.sha256((ROOT / target).read_bytes()).hexdigest()[:12]
+    return relative(target, page) + '?v=' + version
 
 
 def anchor(url, label, **attrs):
@@ -41,8 +47,8 @@ def page_head(title, description, page, lang, alternate):
 <meta property="og:type" content="{'website' if page in ('index.html', 'en/index.html') else 'article'}">
 <meta property="og:title" content="{escape(title, quote=True)}"><meta property="og:description" content="{escape(description, quote=True)}"><meta property="og:url" content="{url}">
 <meta name="theme-color" content="#163b66">
-<link rel="stylesheet" href="{relative('assets/site.css', page)}">
-<script src="{relative('assets/site.js', page)}" defer></script>
+<link rel="stylesheet" href="{asset_url('assets/site.css', page)}">
+<script src="{asset_url('assets/site.js', page)}" defer></script>
 </head><body id="top">
 <a class="skip" href="#main">{'跳到正文' if lang == 'zh' else 'Skip to content'}</a>'''
 
@@ -136,7 +142,8 @@ def build_report(report, lang):
                   r'<figure class="report-figure"><a href="\2"><img alt="\1" src="\2" loading="lazy"></a></figure>', body)
     body = re.sub(r'(</figure>)\s*<p>(?:<em>)?((?:图\s*\d+|Figure\s+\d+).*?)(?:</em>)?</p>',
                   lambda m: m.group(1).replace('</figure>', '<figcaption>'+m.group(2).removesuffix('</em>')+'</figcaption></figure>'), body)
-    body = body.replace('<table>', '<div class="table-wrap" role="region" tabindex="0" aria-label="'+('数据表' if lang == 'zh' else 'Data table')+'"><table>').replace('</table>', '</table></div>')
+    hint = '表格可左右滑动' if lang == 'zh' else 'Scroll sideways to view the table'
+    body = body.replace('<table>', '<div class="table-wrap" role="region" tabindex="0" data-scroll-hint="'+hint+'" aria-label="'+('数据表；'+hint if lang == 'zh' else 'Data table; '+hint)+'"><table>').replace('</table>', '</table></div>')
     title = report['title'][lang]
     evidence_url = report['evidence'].get('url', '../'+report['evidence']['path'])
     full = page_head(title, report['description'][lang], page, lang, alternate) + header(page, lang, alternate)
